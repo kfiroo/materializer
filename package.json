@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@types/jest": "^26.0.20",
+    "@types/lodash": "^4.14.167",
     "@types/node": "^14.14.20",
     "@types/source-map-support": "^0.5.3",
     "jest": "^26.6.3",
+    "lodash": "^4.17.20",
     "source-map-support": "^0.5.19",
     "ts-jest": "^26.4.4",
     "ts-node": "^9.1.1",
