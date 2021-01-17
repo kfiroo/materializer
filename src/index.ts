@@ -142,22 +142,19 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
                 })
             })
 
+            const invalidations = Array.from(invalidationsSet.values()).map(x => x.split('.') as [string, string | number])
             
             merge(template, obj)
-            populate(Array.from(invalidationsSet.values()).map(x => x.split('.')))
+            populate(invalidations)
 
-            const invalidations = [...invalidationsSet.values()].map(x => {
-                let strings = x.split('.');
-                const invalidation: [string, string | number] = [strings[0], strings[1]];
-                return invalidation
-            })
             const uniqueInvalidations = new Set<string>(flatMap(invalidations, x => {
-                const dependencies = index[x.join('.')]
+                const sPath = x.join('.')
+                const dependencies = index[sPath]
                 if (!dependencies){
-                    return []
+                    return [sPath]
                 }
-                return [...dependencies.values()].map(d => take(d.split('.'), 2) as [string, string | number]) 
-            }).concat(invalidations).map(i => i.join('.')))
+                return [...dependencies.values(), sPath]
+            }))
 
             return Array.from(uniqueInvalidations).map(x => x.split('.') as [string, string | number]).filter(([root]) => observedRoots.includes(root))
         },
