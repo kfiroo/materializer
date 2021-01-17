@@ -71,7 +71,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
             }
             const oldTemplate = get(template, path)
             if (oldTemplate) {
-                set(template, path, merge({}, oldTemplate, newTemplate))
+                set(template, path, merge({}, oldTemplate, value))
             } else {
                 set(template, path, value)
             }
@@ -89,7 +89,10 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
             return every(index, (dependencies, parent) => !has(template, parent) || !dependencies.has(sPath))
         })
 
+        const allInvalidations: Array<Path> = []
+
         const populateRec = (paths: Array<Path>) => {
+            allInvalidations.push(...paths)
             forEach(paths, path => {
                 const val = get(template, path)
 
@@ -125,6 +128,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
             })
         }    
         populateRec(startFromHere)
+        return allInvalidations
     }
 
 
@@ -160,16 +164,9 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
             const invalidations = Array.from(invalidationsSet.values()).map(x => x.split('.') as [string, string | number])
             
             mergeTemplates(obj)
-            populate(invalidations)
+            const allInvalidations = populate(invalidations)
 
-            const uniqueInvalidations = new Set<string>(flatMap(invalidations, x => {
-                const sPath = x.join('.')
-                const dependencies = index[sPath]
-                if (!dependencies){
-                    return [sPath]
-                }
-                return [...dependencies.values(), sPath]
-            }))
+            const uniqueInvalidations = new Set<string>(flatMap(allInvalidations, x => x.join('.')))
 
             return Array.from(uniqueInvalidations).map(x => x.split('.') as [string, string | number]).filter(([root]) => observedRoots.includes(root))
         },
