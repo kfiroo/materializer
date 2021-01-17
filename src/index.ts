@@ -1,4 +1,4 @@
-import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, flatMap, take} from 'lodash'
+import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, flatMap, take, mapValues} from 'lodash'
 
 const REF_DOLLAR = '$'
 
@@ -28,26 +28,43 @@ interface Visitor {
 
 type Path = Array<string | number>
 
+const traverse = (obj: any, visit: Visitor, path: Path = []) => {
+    visit(obj, path)
+    if (isObjectLike(obj)) {
+        forEach(obj, (value, key) => {
+            traverse(value, visit, [...path, key]);
+        })
+    }
+}
+
+const isRef = (x: any) => isString(x) && startsWith(x, REF_DOLLAR)
+const getRefPath = (x: string) => x.slice(1)
+
+export const inferSchema = (dataFragment: DataFragment): DataFragment => {
+    const refPaths: Array<Path> = []
+    const schema = {}
+    traverse(dataFragment, (value, path) => {
+        if (isRef(value)) {
+            refPaths.push(path)
+        }
+    })
+    refPaths.forEach(path => set(schema, path, true))
+    return schema
+}
+
+export const mergeSchemas = (targetSchema: DataFragment, newSchema: DataFragment) => {
+    merge(targetSchema, newSchema)
+}
+
+
 export const createDataSource: DataSourceFactory = ({observedRoots}) => {
     const template = {}
     const materialized = {}
+    const schemas = {}
 
     const index: Record<string, Set<string>> = {}
 
-    const traverse = (obj: any, visit: Visitor, path: Path = []) => {
-        visit(obj, path)
-        if (isObjectLike(obj)) {
-            forEach(obj, (value, key) => {
-                traverse(value, visit, [...path, key]);
-            })
-        }
-    }
-    const resolve = (x: any) => x
-
-    const isRef = (x: any) => isString(x) && startsWith(x, REF_DOLLAR)
-    const getRefPath = (x: string) => x.slice(1)
-
-    const populate = (invalidations: Invalidations) => {
+    const populate = (invalidations: Array<Path>) => {
         const startFromHere = invalidations.filter(singleInvalidation =>{
             return every(index, dependencies => !dependencies.has(singleInvalidation.join('.')))
         })
@@ -70,6 +87,9 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
         update(obj) {
             const invalidationsSet = new Set<string>()
 
+            // const schema = inferSchema(obj)
+            // mergeSchemas(schemas, schema)
+
             traverse(obj, (value, path) => {
                 const sPath = path.join('.')
                 if (path.length === 2) {
@@ -89,7 +109,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
             })
 
             merge(template, obj)
-            populate(invalidations)
+            populate(Array.from(invalidationsSet.values()).map(x => x.split('.')))
 
             const uniqueInvalidations = new Set<string>(flatMap(invalidations, x => {
                 const dependencies = index[x.join('.')]

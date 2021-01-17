@@ -78,4 +78,38 @@ describe('materializer', () => {
         expect(ds.get('comps.comp1')).toBe(ds.get('comps.comp1'))
     })
 
+    it('should allow references to observedRoots', () => {
+        const ds = createDataSource({
+            observedRoots: ['comps']
+        })
+
+        const invalidation1 = ds.update({
+            comps: {
+                comp1: {
+                    props: {
+                        label: '$comps.comp2.props.label'
+                    }
+                },
+                comp2: {
+                    props: {
+                        label: 5
+                    }
+                }
+            }
+        })
+        expect(invalidation1).toEqual([
+            ['comps', 'comp1'],
+            ['comps', 'comp2']
+        ])
+        expect(ds.get('comps.comp1')).toEqual({
+            props: {
+                label: 5
+            }
+        })
+        expect(ds.get('comps.comp2')).toEqual({
+            props: {
+                label: 5
+            }
+        })
+    })
 })
