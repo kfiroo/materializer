@@ -26,7 +26,7 @@ describe('materializer', () => {
         })
     })
 
-    it('should ', () => {
+    it('should update references when updating the model', () => {
         const ds = createDataSource({
             observedRoots: ['comps']
         })
@@ -34,7 +34,6 @@ describe('materializer', () => {
         const invalidation1 = ds.update({
             comps: {
                 comp1: {
-                    foo: '$a',
                     props: {
                         link: '$links.link1'
                     }
@@ -66,6 +65,7 @@ describe('materializer', () => {
         expect(invalidation2).toEqual([
             ['comps', 'comp1']
         ])
+
         expect(ds.get('comps.comp1')).toEqual({
             props: {
                 link: {
