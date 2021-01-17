@@ -69,17 +69,21 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
             return every(index, dependencies => !dependencies.has(singleInvalidation.join('.')))
         })
 
-        forEach(startFromHere, path => {
-            const val = get(template, path)
-            set(materialized, path, val)
-            const dependencies = index[path.join('.')]
-            if (!dependencies){
-                return
-            }
-            forEach([...dependencies.values()], (dependency: string)=> {
-                set(materialized, dependency, val)
+        const populateRec = (paths: Array<Path>) => {
+            forEach(paths, path => {
+                const val = get(template, path)
+                set(materialized, path, val)
+                const dependencies = index[path.join('.')]
+                if (!dependencies){
+                    return
+                }
+                forEach([...dependencies.values()], (dependency: string)=> {
+                    set(materialized, dependency, val)
+                    populateRec([dependency.split('.')])
+                })
             })
-        })
+        }    
+        populateRec(startFromHere)
     }
 
 

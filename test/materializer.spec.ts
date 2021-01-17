@@ -112,4 +112,40 @@ describe('materializer', () => {
             }
         })
     })
+
+    it('should allow ref to ref', () => {
+        const ds = createDataSource({
+            observedRoots: ['comps']
+        })
+
+        const invalidation1 = ds.update({
+            comps: {
+                comp1: {
+                    props: {
+                        label: '$comps.comp2.props.label'
+                    }
+                },
+                comp2: {
+                    props: {
+                        label: '$comps.comp3.props.label'
+                    }
+                },
+                comp3: {
+                    props: {
+                        label: 5
+                    }
+                }
+            }
+        })
+        expect(invalidation1).toEqual([
+            ['comps', 'comp1'],
+            ['comps', 'comp2'],
+            ['comps', 'comp3']
+        ])
+        expect(ds.get('comps.comp1')).toEqual({
+            props: {
+                label: 5
+            }
+        })
+    })
 })
