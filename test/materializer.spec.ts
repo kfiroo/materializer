@@ -91,6 +91,7 @@ describe('materializer', () => {
 
         // don't materialize twice
         expect(ds.get('comps.comp1')).toBe(ds.get('comps.comp1'))
+        expect(ds.get('comps.comp1.props.link')).toBe(ds.get('links.link1'))
     })
 
     it('should not change original values - no side effect', () => {
