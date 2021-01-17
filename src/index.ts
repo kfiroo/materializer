@@ -1,4 +1,4 @@
-import {get, set, forEach, isObjectLike, startsWith, isString} from 'lodash'
+import {get, set, forEach, isObjectLike, startsWith, isString, merge} from 'lodash'
 
 const REF_DOLLAR = '$'
 
@@ -47,35 +47,34 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
     const isRef = (x: any) => isString(x) && startsWith(x, REF_DOLLAR)
 
     const populate = (invalidations: Invalidations) => {
+        forEach(invalidations, path => set(materialized, path, get(template, path)))
     }
 
 
     return {
         update(obj) {
-            const invalidations = collectInvalidations(obj)
-            const refs = collectRefs(obj)
-            const updates = collectUpdates(obj)
-
-
-            const invalidations = new Set<[string]>()
-
+            const invalidationsSet = new Set<string>()
 
             traverse(obj, (value, path) => {
                 const sPath = path.join('.')
                 if (path.length === 2 && observedRoots.includes(path[0] as string)) {
-                    invalidations.add(sPath)
+                    invalidationsSet.add(sPath)
                 }
-                if (isRef(value)) {
-                    index[value] = index[value] || new Set<string>()
-                    index[value].add(sPath)
-                    invalidations.add([path[0], path[1]].join('.'))
-                }
+                // if (isRef(value)) {
+                //     index[value] = index[value] || new Set<string>()
+                //     index[value].add(sPath)
+                //     // invalidations.add([path[0], path[1]].join('.'))
+                // }
             })
-            populate( invalidations)
-            return [...invalidations.values()].map(x => {
+            const invalidations = [...invalidationsSet.values()].map(x => {
                 let strings = x.split('.');
-                return [strings[0], strings[1]];
+                const invalidation:[string, string | number] = [strings[0], strings[1]];
+                return invalidation
             })
+
+            merge(template, obj)
+            populate( invalidations)
+            return invalidations
         },
         get(path) {
             return get(materialized, path)

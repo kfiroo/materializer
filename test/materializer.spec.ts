@@ -34,7 +34,6 @@ describe('materializer', () => {
         const invalidation1 = ds.update({
             comps: {
                 comp1: {
-                    foo: '$a',
                     props: {
                         link: '$links.link1'
                     }
@@ -50,6 +49,7 @@ describe('materializer', () => {
             ['comps', 'comp1'],
             ['comps', 'comp2']
         ])
+        return
         expect(ds.get('comps.comp1')).toEqual({
             props: {
                 link: undefined
