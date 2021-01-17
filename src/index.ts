@@ -1,4 +1,4 @@
-import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, flatMap, take, mapValues, isUndefined, has} from 'lodash'
+import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has} from 'lodash'
 
 const REF_DOLLAR = '$'
 
