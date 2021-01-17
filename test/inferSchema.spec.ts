@@ -30,7 +30,7 @@ describe('inferSchema', () => {
             comps: {
                 comp1: {
                     props: {
-                        link: true,
+                        link: {$type:'ref', refPath: 'links.link1'},
                     }
                 }
             }

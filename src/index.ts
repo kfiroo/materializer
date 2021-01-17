@@ -1,4 +1,4 @@
-import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, flatMap, take, mapValues} from 'lodash'
+import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, flatMap, take, mapValues, isUndefined, has} from 'lodash'
 
 const REF_DOLLAR = '$'
 
@@ -23,13 +23,15 @@ interface DataSource {
 }
 
 interface Visitor {
-    (value: any, path: Array<string | number>): void
+    (value: any, path: Array<string | number>): true | void
 }
 
 type Path = Array<string | number>
 
 const traverse = (obj: any, visit: Visitor, path: Path = []) => {
-    visit(obj, path)
+    if (visit(obj, path)) {
+        return
+    }
     if (isObjectLike(obj)) {
         forEach(obj, (value, key) => {
             traverse(value, visit, [...path, key]);
@@ -41,14 +43,12 @@ const isRef = (x: any) => isString(x) && startsWith(x, REF_DOLLAR)
 const getRefPath = (x: string) => x.slice(1)
 
 export const inferSchema = (dataFragment: DataFragment): DataFragment => {
-    const refPaths: Array<Path> = []
     const schema = {}
     traverse(dataFragment, (value, path) => {
         if (isRef(value)) {
-            refPaths.push(path)
-        }
+            set(schema, path, {$type: 'ref', refPath: getRefPath(value)})       
+         }
     })
-    refPaths.forEach(path => set(schema, path, true))
     return schema
 }
 
@@ -66,21 +66,47 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
 
     const populate = (invalidations: Array<Path>) => {
         const startFromHere = invalidations.filter(singleInvalidation =>{
-            return every(index, dependencies => !dependencies.has(singleInvalidation.join('.')))
+            const schema = get(schemas, singleInvalidation)
+            if (!schema) {
+                return true
+            }
+            const sPath = singleInvalidation.join('.')
+            return every(index, (dependencies, parent) => !has(template, parent) || !dependencies.has(sPath))
         })
 
         const populateRec = (paths: Array<Path>) => {
             forEach(paths, path => {
                 const val = get(template, path)
-                set(materialized, path, val)
+
+                if (!has(schemas, path)) {
+                    set(materialized, path, val)
+                } else {
+                    const nodeSchema = get(schemas, path)
+                    const newVal = {}
+                    traverse(val, (objValue, objPath) => {
+                        if (!objPath.length) {
+                            return
+                        }
+                        const schema = get(nodeSchema, objPath)
+                        if (!schema) {
+                            set(newVal, objPath, objValue)
+                            return
+                        }
+                        if (has(schema, '$type')) {
+                            const resolved = get(materialized, schema.refPath)
+                            set(newVal, objPath, resolved)
+                        } else {
+                            set(newVal, objPath, {...objValue})
+                        }    
+                    })
+                    set(materialized, path, newVal)
+                }
+
                 const dependencies = index[path.join('.')]
                 if (!dependencies){
                     return
                 }
-                forEach([...dependencies.values()], (dependency: string)=> {
-                    set(materialized, dependency, val)
-                    populateRec([dependency.split('.')])
-                })
+                populateRec([...dependencies.values()].map(d => d.split('.')))
             })
         }    
         populateRec(startFromHere)
@@ -91,30 +117,40 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
         update(obj) {
             const invalidationsSet = new Set<string>()
 
-            // const schema = inferSchema(obj)
-            // mergeSchemas(schemas, schema)
+            const schema = inferSchema(obj)
+            mergeSchemas(schemas, schema)
 
             traverse(obj, (value, path) => {
+                if (path.length !== 2) {
+                    return
+                }
+
                 const sPath = path.join('.')
-                if (path.length === 2) {
-                    invalidationsSet.add(sPath)
+                invalidationsSet.add(sPath)
+
+                const mySchema = get(schemas, path)
+                if (!mySchema) {
+                    return true
                 }
-                if (isRef(value)) {
-                    const refPath = getRefPath(value)
-                    index[refPath] = index[refPath] || new Set<string>()
-                    index[refPath].add(sPath)
-                    invalidationsSet.add(refPath)
-                }
+
+                traverse(mySchema, (schemaVal) => {
+                    if (has(schemaVal, '$type')) { 
+                        const refPath = take(schemaVal.refPath.split('.'), 2).join('.') 
+                        index[refPath] = index[refPath] || new Set<string>()
+                        index[refPath].add(take(path, 2).join('.'))
+                    }
+                })
             })
+
+            
+            merge(template, obj)
+            populate(Array.from(invalidationsSet.values()).map(x => x.split('.')))
+
             const invalidations = [...invalidationsSet.values()].map(x => {
                 let strings = x.split('.');
                 const invalidation: [string, string | number] = [strings[0], strings[1]];
                 return invalidation
             })
-
-            merge(template, obj)
-            populate(Array.from(invalidationsSet.values()).map(x => x.split('.')))
-
             const uniqueInvalidations = new Set<string>(flatMap(invalidations, x => {
                 const dependencies = index[x.join('.')]
                 if (!dependencies){
@@ -126,7 +162,8 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
             return Array.from(uniqueInvalidations).map(x => x.split('.') as [string, string | number]).filter(([root]) => observedRoots.includes(root))
         },
         get(path) {
-            return get(materialized, path)
+            const val = get(materialized, path)
+            return val
         }
     }
 }
