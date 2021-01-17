@@ -1,9 +1,10 @@
-import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, flatMap, take} from 'lodash'
+import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has} from 'lodash'
 
 const REF_DOLLAR = '$'
 
 interface DataSourceOptions {
     observedRoots: Array<string>
+    depth: number
 }
 
 interface DataSourceFactory {
@@ -17,92 +18,157 @@ interface DataFragment {
 type Invalidations = Array<[string, string | number]>
 
 interface DataSource {
-    update(obj: DataFragment): Invalidations
+    update(fragment: DataFragment, fragmentSchema?: DataFragment): Invalidations
 
     get<T = any>(path: string): T
 }
 
 interface Visitor {
-    (value: any, path: Array<string | number>): void
+    (value: any, path: Array<string | number>): true | void
 }
 
 type Path = Array<string | number>
 
-export const createDataSource: DataSourceFactory = ({observedRoots}) => {
+const traverse = (obj: any, visit: Visitor, path: Path = []) => {
+    if (visit(obj, path)) {
+        return
+    }
+    if (isObjectLike(obj)) {
+        forEach(obj, (value, key) => {
+            traverse(value, visit, [...path, key]);
+        })
+    }
+}
+
+const isRef = (x: any) => isString(x) && startsWith(x, REF_DOLLAR)
+const getRefPath = (x: string) => x.slice(1)
+
+export const inferSchema = (dataFragment: DataFragment): DataFragment => {
+    const schema = {}
+    traverse(dataFragment, (value, path) => {
+        if (isRef(value)) {
+            set(schema, path, {$type: 'ref', refPath: getRefPath(value)})       
+         }
+    })
+    return schema
+}
+
+export const mergeSchemas = (targetSchema: DataFragment, newSchema: DataFragment) => {
+    merge(targetSchema, newSchema)
+}
+
+export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
     const template = {}
     const materialized = {}
+    const schemas = {}
 
     const index: Record<string, Set<string>> = {}
 
-    const traverse = (obj: any, visit: Visitor, path: Path = []) => {
-        visit(obj, path)
-        if (isObjectLike(obj)) {
-            forEach(obj, (value, key) => {
-                traverse(value, visit, [...path, key]);
-            })
-        }
-    }
-    const resolve = (x: any) => x
-
-    const isRef = (x: any) => isString(x) && startsWith(x, REF_DOLLAR)
-    const getRefPath = (x: string) => x.slice(1)
-
-    const populate = (invalidations: Invalidations) => {
-        const startFromHere = invalidations.filter(singleInvalidation =>{
-            return every(index, dependencies => !dependencies.has(singleInvalidation.join('.')))
-        })
-
-        forEach(startFromHere, path => {
-            const val = get(template, path)
-            set(materialized, path, val)
-            const dependencies = index[path.join('.')]
-            if (!dependencies){
+    const mergeTemplates = (newTemplate: DataFragment) => {
+        traverse(newTemplate, (value, path) => {
+            if (path.length !== depth) {
                 return
             }
-            forEach([...dependencies.values()], (dependency: string)=> {
-                set(materialized, dependency, val)
-            })
+            const oldTemplate = get(template, path)
+            if (oldTemplate) {
+                set(template, path, merge({}, oldTemplate, value))
+            } else {
+                set(template, path, value)
+            }
+            return true
         })
+    }
+
+    const populate = (invalidations: Set<string>) => {
+        const startFromHere = new Set(Array.from(invalidations).filter(singleInvalidation =>{
+            const schema = get(schemas, singleInvalidation)
+            if (!schema) {
+                return true
+            }
+            return every(index, (dependencies, parent) => !has(template, parent) || !dependencies.has(singleInvalidation))
+        }))
+
+        const allInvalidations = new Set<string>()
+
+        const populateRec = (paths: Set<string>) => {
+            forEach([...paths.values()], path => {
+                allInvalidations.add(path)
+                const val = get(template, path)
+
+                if (!has(schemas, path)) {
+                    set(materialized, path, val)
+                } else {
+                    const nodeSchema = get(schemas, path)
+                    const newVal = {}
+                    traverse(val, (objValue, objPath) => {
+                        if (!objPath.length) {
+                            return
+                        }
+                        const schema = get(nodeSchema, objPath)
+                        if (!schema) {
+                            set(newVal, objPath, objValue)
+                            return
+                        }
+                        if (has(schema, '$type')) {
+                            const resolved = get(materialized, schema.refPath)
+                            set(newVal, objPath, resolved)
+                        } else {
+                            set(newVal, objPath, {...objValue})
+                        }    
+                    })
+                    set(materialized, path, newVal)
+                }
+
+                const dependencies = index[path]
+                if (!dependencies){
+                    return
+                }
+                populateRec(dependencies)
+            })
+        }    
+        populateRec(startFromHere)
+        return allInvalidations
     }
 
 
     return {
-        update(obj) {
-            const invalidationsSet = new Set<string>()
+        update(obj, schema = inferSchema(obj)) {
+            const invalidations = new Set<string>()
 
-            traverse(obj, (value, path) => {
+            mergeSchemas(schemas, schema)
+
+            traverse(obj, (__, path) => {
+                if (path.length !== depth) {
+                    return
+                }
+
                 const sPath = path.join('.')
-                if (path.length === 2) {
-                    invalidationsSet.add(sPath)
+                invalidations.add(sPath)
+
+                const mySchema = get(schemas, path)
+                if (!mySchema) {
+                    return true
                 }
-                if (isRef(value)) {
-                    const refPath = getRefPath(value)
-                    index[refPath] = index[refPath] || new Set<string>()
-                    index[refPath].add(sPath)
-                    invalidationsSet.add(refPath)
-                }
+
+                traverse(mySchema, (schemaVal) => {
+                    if (has(schemaVal, '$type')) { 
+                        const refPath = take(schemaVal.refPath.split('.'), depth).join('.') 
+                        index[refPath] = index[refPath] || new Set<string>()
+                        index[refPath].add(take(path, depth).join('.'))
+                    }
+                })
             })
-            const invalidations = [...invalidationsSet.values()].map(x => {
-                let strings = x.split('.');
-                const invalidation: [string, string | number] = [strings[0], strings[1]];
-                return invalidation
-            })
+            
+            mergeTemplates(obj)
+            
+            const recursiveInvalidations = populate(invalidations)
 
-            merge(template, obj)
-            populate(invalidations)
-
-            const uniqueInvalidations = new Set<string>(flatMap(invalidations, x => {
-                const dependencies = index[x.join('.')]
-                if (!dependencies){
-                    return []
-                }
-                return [...dependencies.values()].map(d => take(d.split('.'), 2) as [string, string | number]) 
-            }).concat(invalidations).map(i => i.join('.')))
-
-            return Array.from(uniqueInvalidations).map(x => x.split('.') as [string, string | number]).filter(([root]) => observedRoots.includes(root))
+            return Array.from(recursiveInvalidations).map(x => x.split('.') as [string, string | number])
+                .filter(([root]) => observedRoots.includes(root))
         },
         get(path) {
-            return get(materialized, path)
+            const val = get(materialized, path)
+            return val
         }
     }
 }
