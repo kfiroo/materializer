@@ -4,6 +4,7 @@ const REF_DOLLAR = '$'
 
 interface DataSourceOptions {
     observedRoots: Array<string>
+    depth: number
 }
 
 interface DataSourceFactory {
@@ -56,7 +57,7 @@ export const mergeSchemas = (targetSchema: DataFragment, newSchema: DataFragment
     merge(targetSchema, newSchema)
 }
 
-export const createDataSource: DataSourceFactory = ({observedRoots}) => {
+export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
     const template = {}
     const materialized = {}
     const schemas = {}
@@ -65,7 +66,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
 
     const mergeTemplates = (newTemplate: DataFragment) => {
         traverse(newTemplate, (value, path) => {
-            if (path.length !== 2) {
+            if (path.length !== depth) {
                 return
             }
             const oldTemplate = get(template, path)
@@ -134,8 +135,8 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
             const schema = inferSchema(obj)
             mergeSchemas(schemas, schema)
 
-            traverse(obj, (value, path) => {
-                if (path.length !== 2) {
+            traverse(obj, (__, path) => {
+                if (path.length !== depth) {
                     return
                 }
 
@@ -149,9 +150,9 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
 
                 traverse(mySchema, (schemaVal) => {
                     if (has(schemaVal, '$type')) { 
-                        const refPath = take(schemaVal.refPath.split('.'), 2).join('.') 
+                        const refPath = take(schemaVal.refPath.split('.'), depth).join('.') 
                         index[refPath] = index[refPath] || new Set<string>()
-                        index[refPath].add(take(path, 2).join('.'))
+                        index[refPath].add(take(path, depth).join('.'))
                     }
                 })
             })

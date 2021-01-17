@@ -3,7 +3,8 @@ import {createDataSource} from '../src';
 describe('materializer', () => {
     it('should materialize without refs', () => {
         const ds = createDataSource({
-            observedRoots: ['comps']
+            observedRoots: ['comps'],
+            depth: 2
         })
 
         const invalidation1 = ds.update({
@@ -26,7 +27,8 @@ describe('materializer', () => {
     })
     it('should keep same object reference when has no ref', () => {
         const ds = createDataSource({
-            observedRoots: ['comps']
+            observedRoots: ['comps'],
+            depth: 2
         })
 
         const obj = {
@@ -46,7 +48,8 @@ describe('materializer', () => {
 
     it('should update references when updating the model', () => {
         const ds = createDataSource({
-            observedRoots: ['comps']
+            observedRoots: ['comps'],
+            depth: 2
         })
 
         const invalidation1 = ds.update({
@@ -92,7 +95,8 @@ describe('materializer', () => {
 
     it('should not change original values - no side effect', () => {
         const ds = createDataSource({
-            observedRoots: ['comps']
+            observedRoots: ['comps'],
+            depth: 2
         })
         const obj = {
             comps: {
@@ -114,7 +118,8 @@ describe('materializer', () => {
 
     it('should allow references to observedRoots', () => {
         const ds = createDataSource({
-            observedRoots: ['comps']
+            observedRoots: ['comps'],
+            depth: 2
         })
 
         const invalidation1 = ds.update({
@@ -149,7 +154,8 @@ describe('materializer', () => {
 
     it('should allow ref to ref', () => {
         const ds = createDataSource({
-            observedRoots: ['comps']
+            observedRoots: ['comps'],
+            depth: 2
         })
 
         const invalidation1 = ds.update({
