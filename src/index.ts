@@ -18,7 +18,7 @@ interface DataFragment {
 type Invalidations = Array<[string, string | number]>
 
 interface DataSource {
-    update(obj: DataFragment): Invalidations
+    update(fragment: DataFragment, fragmentSchema?: DataFragment): Invalidations
 
     get<T = any>(path: string): T
 }
@@ -79,21 +79,20 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
         })
     }
 
-    const populate = (invalidations: Array<Path>) => {
-        const startFromHere = invalidations.filter(singleInvalidation =>{
+    const populate = (invalidations: Set<string>) => {
+        const startFromHere = new Set(Array.from(invalidations).filter(singleInvalidation =>{
             const schema = get(schemas, singleInvalidation)
             if (!schema) {
                 return true
             }
-            const sPath = singleInvalidation.join('.')
-            return every(index, (dependencies, parent) => !has(template, parent) || !dependencies.has(sPath))
-        })
+            return every(index, (dependencies, parent) => !has(template, parent) || !dependencies.has(singleInvalidation))
+        }))
 
-        const allInvalidations: Array<Path> = []
+        const allInvalidations = new Set<string>()
 
-        const populateRec = (paths: Array<Path>) => {
-            allInvalidations.push(...paths)
-            forEach(paths, path => {
+        const populateRec = (paths: Set<string>) => {
+            forEach([...paths.values()], path => {
+                allInvalidations.add(path)
                 const val = get(template, path)
 
                 if (!has(schemas, path)) {
@@ -120,11 +119,11 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                     set(materialized, path, newVal)
                 }
 
-                const dependencies = index[path.join('.')]
+                const dependencies = index[path]
                 if (!dependencies){
                     return
                 }
-                populateRec([...dependencies.values()].map(d => d.split('.')))
+                populateRec(dependencies)
             })
         }    
         populateRec(startFromHere)
@@ -133,10 +132,9 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
 
 
     return {
-        update(obj) {
-            const invalidationsSet = new Set<string>()
+        update(obj, schema = inferSchema(obj)) {
+            const invalidations = new Set<string>()
 
-            const schema = inferSchema(obj)
             mergeSchemas(schemas, schema)
 
             traverse(obj, (__, path) => {
@@ -145,7 +143,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                 }
 
                 const sPath = path.join('.')
-                invalidationsSet.add(sPath)
+                invalidations.add(sPath)
 
                 const mySchema = get(schemas, path)
                 if (!mySchema) {
@@ -160,15 +158,13 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                     }
                 })
             })
-
-            const invalidations = Array.from(invalidationsSet.values()).map(x => x.split('.') as [string, string | number])
             
             mergeTemplates(obj)
-            const allInvalidations = populate(invalidations)
+            
+            const recursiveInvalidations = populate(invalidations)
 
-            const uniqueInvalidations = new Set<string>(flatMap(allInvalidations, x => x.join('.')))
-
-            return Array.from(uniqueInvalidations).map(x => x.split('.') as [string, string | number]).filter(([root]) => observedRoots.includes(root))
+            return Array.from(recursiveInvalidations).map(x => x.split('.') as [string, string | number])
+                .filter(([root]) => observedRoots.includes(root))
         },
         get(path) {
             const val = get(materialized, path)
