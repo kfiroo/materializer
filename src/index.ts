@@ -56,13 +56,27 @@ export const mergeSchemas = (targetSchema: DataFragment, newSchema: DataFragment
     merge(targetSchema, newSchema)
 }
 
-
 export const createDataSource: DataSourceFactory = ({observedRoots}) => {
     const template = {}
     const materialized = {}
     const schemas = {}
 
     const index: Record<string, Set<string>> = {}
+
+    const mergeTemplates = (newTemplate: DataFragment) => {
+        traverse(newTemplate, (value, path) => {
+            if (path.length !== 2) {
+                return
+            }
+            const oldTemplate = get(template, path)
+            if (oldTemplate) {
+                set(template, path, merge({}, oldTemplate, newTemplate))
+            } else {
+                set(template, path, value)
+            }
+            return true
+        })
+    }
 
     const populate = (invalidations: Array<Path>) => {
         const startFromHere = invalidations.filter(singleInvalidation =>{
@@ -144,7 +158,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots}) => {
 
             const invalidations = Array.from(invalidationsSet.values()).map(x => x.split('.') as [string, string | number])
             
-            merge(template, obj)
+            mergeTemplates(obj)
             populate(invalidations)
 
             const uniqueInvalidations = new Set<string>(flatMap(invalidations, x => {

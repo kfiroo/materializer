@@ -1,7 +1,6 @@
 import {createDataSource} from '../src';
 
 describe('materializer', () => {
-
     it('should materialize without refs', () => {
         const ds = createDataSource({
             observedRoots: ['comps']
@@ -25,6 +24,25 @@ describe('materializer', () => {
             }
         })
     })
+    it('should keep same object reference when has no ref', () => {
+        const ds = createDataSource({
+            observedRoots: ['comps']
+        })
+
+        const obj = {
+            comps: {
+                comp1: {
+                    props: {
+                        label: 5
+                    }
+                }
+            }
+        }
+
+        ds.update(obj)
+        
+        expect(ds.get('comps.comp1')).toBe(obj.comps.comp1)
+    })
 
     it('should update references when updating the model', () => {
         const ds = createDataSource({
@@ -37,17 +55,11 @@ describe('materializer', () => {
                     props: {
                         link: '$links.link1'
                     }
-                },
-                comp2: {
-                    props: {
-                        label: 5
-                    }
                 }
             }
         })
         expect(invalidation1).toEqual([
-            ['comps', 'comp1'],
-            ['comps', 'comp2']
+            ['comps', 'comp1']
         ])
         expect(ds.get('comps.comp1')).toEqual({
             props: {
@@ -76,6 +88,28 @@ describe('materializer', () => {
 
         // don't materialize twice
         expect(ds.get('comps.comp1')).toBe(ds.get('comps.comp1'))
+    })
+
+    it('should not change original values - no side effect', () => {
+        const ds = createDataSource({
+            observedRoots: ['comps']
+        })
+        const obj = {
+            comps: {
+                comp1: {
+                    props: {
+                        link: '$links.link1'
+                    }
+                }
+            }
+        }
+
+        ds.update(obj)
+        expect(obj.comps.comp1).toEqual({
+            props: {
+                link: '$links.link1'
+            }
+        })
     })
 
     it('should allow references to observedRoots', () => {
