@@ -81,7 +81,37 @@ describe('materializer', () => {
                 }
             }
         })
+    })
 
+    it('should allow mix of references from different sources', () => {
+        const ds = createDataSource({
+            observedRoots: ['comps'],
+            depth: 2
+        })
+
+        const invalidation1 = ds.update({
+            comps: {
+                comp1: {
+                    props: {
+                        label: '$runtime.comp1.label',
+                        link: '$links.link1'
+                    }
+                }
+            },
+            runtime: {
+                comp1: {
+                    label: 5
+                }
+            },
+            links: {
+                link1: {
+                    href: 'http://tahat.shel.kof.raki'
+                }
+            }
+        })
+        expect(invalidation1).toEqual([
+            ['comps', 'comp1']
+        ])
         expect(ds.get('comps.comp1')).toEqual({
             props: {
                 label: 5,

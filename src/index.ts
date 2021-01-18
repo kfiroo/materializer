@@ -1,4 +1,4 @@
-import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has} from 'lodash'
+import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has, map} from 'lodash'
 
 const REF_DOLLAR = '$'
 
@@ -30,13 +30,16 @@ interface Visitor {
 type Path = Array<string | number>
 
 const traverse = (obj: any, visit: Visitor, path: Path = []) => {
-    if (visit(obj, path)) {
-        return
-    }
-    if (isObjectLike(obj)) {
-        forEach(obj, (value, key) => {
-            traverse(value, visit, [...path, key]);
-        })
+    const queue = [{path, val: obj}]
+
+    while (queue.length) {
+        const next = queue.shift()
+        if (!visit(next.val, next.path) && isObjectLike(next.val)) {
+            queue.push(...map(next.val, (val, key) => ({
+                path: [...next.path, key],
+                val
+            })))
+        }
     }
 }
 
@@ -90,8 +93,18 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
 
         const allInvalidations = new Set<string>()
 
-        const populateRec = (paths: Set<string>) => {
+        const queue = new Array<Set<string>>(startFromHere) 
+
+        const populateRec = () => {
+            if (queue.length === 0) {
+                return
+            }
+            const paths = queue.shift()
             forEach([...paths.values()], path => {
+                if (allInvalidations.has(path)) {
+                    return
+                }
+
                 allInvalidations.add(path)
                 const val = get(template, path)
 
@@ -120,13 +133,13 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                 }
 
                 const dependencies = index[path]
-                if (!dependencies){
-                    return
+                if (dependencies){
+                    queue.push(dependencies)
                 }
-                populateRec(dependencies)
             })
+            populateRec()
         }    
-        populateRec(startFromHere)
+        populateRec()
         return allInvalidations
     }
 
