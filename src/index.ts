@@ -19,7 +19,8 @@ type Invalidations = Array<[string, string | number]>
 
 interface DataSource {
     update(fragment: DataFragment, fragmentSchema?: DataFragment): Invalidations
-
+    updateWithoutFlush(fragment: DataFragment, fragmentSchema?: DataFragment): void
+    flush(): Invalidations
     get<T = any>(path: string): T
 }
 
@@ -182,16 +183,21 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
             .filter(([root]) => observedRoots.includes(root))
     }
 
-    return {
-        update(obj, schema = inferSchema(obj)) {
-            mergeSchemas(schema)
+    const updateWithoutFlush: DataSource['updateWithoutFlush'] = (fragment, fragmentSchema = inferSchema(fragment)) => {
+        mergeSchemas(fragmentSchema)
             
-            mergeTemplates(obj)
+        mergeTemplates(fragment)
 
-           collectInvalidations(obj)
-            
-           return flush()
+        collectInvalidations(fragment)
+    }
+    
+    return {
+        update(fragment, schema = inferSchema(fragment)) {
+            updateWithoutFlush(fragment, schema)
+            return flush()
         },
+        updateWithoutFlush,
+        flush,
         get(path) {
             const val = get(materialized, path)
             return val
