@@ -73,12 +73,31 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                 return
             }
             const oldTemplate = get(template, path)
-            if (oldTemplate) {
+            if (isObjectLike(oldTemplate)) {
                 set(template, path, merge({}, oldTemplate, value))
             } else {
                 set(template, path, value)
             }
             return true
+        })
+    }
+
+    const mergeSchemas = (newSchema: DataFragment) => {
+        traverse(newSchema, (value, path) => {
+            if (has(value, '$type')) { 
+                const oldSchema = get(schemas, path)
+                if (oldSchema) {
+                    const oldRefPath = take(oldSchema.refPath.split('.'), depth).join('.') 
+                    index[oldRefPath] = index[oldRefPath] || new Set<string>()
+                    index[oldRefPath].delete(take(path, depth).join('.'))
+                }
+
+                set(schemas, path, value)
+                const refPath = take(value.refPath.split('.'), depth).join('.') 
+                index[refPath] = index[refPath] || new Set<string>()
+                index[refPath].add(take(path, depth).join('.'))
+                return true
+            }   
         })
     }
 
@@ -93,7 +112,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
 
         const allInvalidations = new Set<string>()
 
-        const queue = new Array<Set<string>>(startFromHere) 
+        const queue = new Array<Set<string>>(startFromHere.size > 0 ? startFromHere : invalidations) 
 
         const populateRec = () => {
             if (queue.length === 0) {
@@ -148,7 +167,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
         update(obj, schema = inferSchema(obj)) {
             const invalidations = new Set<string>()
 
-            mergeSchemas(schemas, schema)
+            mergeSchemas(schema)
 
             traverse(obj, (__, path) => {
                 if (path.length !== depth) {
@@ -158,18 +177,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                 const sPath = path.join('.')
                 invalidations.add(sPath)
 
-                const mySchema = get(schemas, path)
-                if (!mySchema) {
-                    return true
-                }
-
-                traverse(mySchema, (schemaVal) => {
-                    if (has(schemaVal, '$type')) { 
-                        const refPath = take(schemaVal.refPath.split('.'), depth).join('.') 
-                        index[refPath] = index[refPath] || new Set<string>()
-                        index[refPath].add(take(path, depth).join('.'))
-                    }
-                })
+                return true
             })
             
             mergeTemplates(obj)
