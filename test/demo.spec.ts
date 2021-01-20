@@ -104,6 +104,9 @@ it('env stuff', () => {
             },
             clientSpecMap: {
                 7: {instance: 'kkkkkkk'}
+            },
+            translations: {
+                next: 'adelante!'
             }
         }
     })

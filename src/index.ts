@@ -1,4 +1,4 @@
-import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has, map} from 'lodash'
+import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has, map, isArray} from 'lodash'
 
 const REF_DOLLAR = '$'
 
@@ -126,7 +126,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                             const resolved = get(materialized, schema.refPath)
                             set(newVal, objPath, resolved)
                         } else {
-                            set(newVal, objPath, {...objValue})
+                            set(newVal, objPath, isArray(objValue) ? [...objValue] :  {...objValue})
                         }    
                     })
                     set(materialized, path, newVal)
