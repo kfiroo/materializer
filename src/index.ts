@@ -64,6 +64,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
     const template = {}
     const materialized = {}
     const schemas = {}
+    const pendingInvalidations = new Set<string>()
 
     const index: Record<string, Set<string>> = {}
 
@@ -158,36 +159,38 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
         return allInvalidations
     }
 
-    const getInvalidations = (obj: DataFragment) => {
-        const invalidations = new Set<string>()
 
+    const collectInvalidations = (obj: DataFragment) => {
         traverse(obj, (__, path) => {
             if (path.length !== depth) {
                 return
             }
 
             const sPath = path.join('.')
-            invalidations.add(sPath)
+            pendingInvalidations.add(sPath)
 
             return true
         })
-
-        return invalidations
     }
 
+    const flush = () => {
+        const recursiveInvalidations = populate(pendingInvalidations)
+
+        pendingInvalidations.clear()
+
+        return Array.from(recursiveInvalidations).map(x => x.split('.') as [string, string | number])
+            .filter(([root]) => observedRoots.includes(root))
+    }
 
     return {
         update(obj, schema = inferSchema(obj)) {
             mergeSchemas(schema)
-
-            const invalidations = getInvalidations(obj)
             
             mergeTemplates(obj)
-            
-            const recursiveInvalidations = populate(invalidations)
 
-            return Array.from(recursiveInvalidations).map(x => x.split('.') as [string, string | number])
-                .filter(([root]) => observedRoots.includes(root))
+           collectInvalidations(obj)
+            
+           return flush()
         },
         get(path) {
             const val = get(materialized, path)
