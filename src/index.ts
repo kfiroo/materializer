@@ -114,10 +114,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
 
         const queue = new Array<Set<string>>(startFromHere.size > 0 ? startFromHere : invalidations) 
 
-        const populateRec = () => {
-            if (queue.length === 0) {
-                return
-            }
+        while (queue.length) {
             const paths = queue.shift()
             forEach([...paths.values()], path => {
                 if (allInvalidations.has(path)) {
@@ -155,30 +152,35 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                 if (dependencies){
                     queue.push(dependencies)
                 }
-            })
-            populateRec()
-        }    
-        populateRec()
+            })       
+        }
+        
         return allInvalidations
+    }
+
+    const getInvalidations = (obj: DataFragment) => {
+        const invalidations = new Set<string>()
+
+        traverse(obj, (__, path) => {
+            if (path.length !== depth) {
+                return
+            }
+
+            const sPath = path.join('.')
+            invalidations.add(sPath)
+
+            return true
+        })
+
+        return invalidations
     }
 
 
     return {
         update(obj, schema = inferSchema(obj)) {
-            const invalidations = new Set<string>()
-
             mergeSchemas(schema)
 
-            traverse(obj, (__, path) => {
-                if (path.length !== depth) {
-                    return
-                }
-
-                const sPath = path.join('.')
-                invalidations.add(sPath)
-
-                return true
-            })
+            const invalidations = getInvalidations(obj)
             
             mergeTemplates(obj)
             

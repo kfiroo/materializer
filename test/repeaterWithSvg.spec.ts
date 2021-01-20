@@ -12,7 +12,7 @@ const items = {
         description: "monkey pig 2",
         button: {
             label: 'Buy me today!',
-            href: '$links.link1'
+            link: '$links.link1'
         }
     },
     item3:  {
@@ -68,7 +68,7 @@ it('repeater', () => {
                 description: "monkey pig 2",
                 button: {
                     label: 'Buy me today!',
-                    href: {
+                    link: {
                         href: 'http://tahat.shel.kof.raki',
                         target: '_blank'
                     }
@@ -123,7 +123,7 @@ it('update repeater dependency', () => {
         description: "monkey pig 2",
         button: {
             label: 'Buy me today!',
-            href: {
+            link: {
                 href: 'http://roro.js',
                 target: '_blank'
             }
@@ -196,7 +196,7 @@ it('update repeaters references', () => {
                 description: "monkey pig 2",
                 button: {
                     label: 'Buy me today!',
-                    href: {
+                    link: {
                         href: 'http://tahat.shel.kof.raki',
                         target: '_blank'
                     }
