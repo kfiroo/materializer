@@ -19,8 +19,11 @@ type Invalidations = Array<[string, string | number]>
 
 interface Materializer {
     update(fragment: DataFragment, fragmentSchema?: DataFragment): Invalidations
+
     updateWithoutFlush(fragment: DataFragment, fragmentSchema?: DataFragment): void
+
     flush(): Invalidations
+
     get<T = any>(path: string | Array<string | number>): T
 }
 
@@ -52,7 +55,7 @@ export const inferSchema = (dataFragment: DataFragment): DataFragment => {
     traverse(dataFragment, (value, path) => {
         if (isRef(value)) {
             set(schema, path, {$type: 'ref', refPath: getRefPath(value)})
-         }
+        }
     })
     return schema
 }
@@ -104,7 +107,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
     }
 
     const populate = (invalidations: Set<string>) => {
-        const startFromHere = new Set(Array.from(invalidations).filter(singleInvalidation =>{
+        const startFromHere = new Set(Array.from(invalidations).filter(singleInvalidation => {
             const schema = get(schemas, singleInvalidation)
             if (!schema) {
                 return true
@@ -144,14 +147,14 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                             const resolved = get(materialized, schema.refPath)
                             set(newVal, objPath, resolved)
                         } else {
-                            set(newVal, objPath, isArray(objValue) ? [...objValue] :  {...objValue})
+                            set(newVal, objPath, isArray(objValue) ? [...objValue] : {...objValue})
                         }
                     })
                     set(materialized, path, newVal)
                 }
 
                 const dependencies = index[path]
-                if (dependencies){
+                if (dependencies) {
                     queue.push(dependencies)
                 }
             })
