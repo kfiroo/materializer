@@ -1,14 +1,14 @@
-import {createDataSource} from '../src';
+import {createMaterializer} from '../src';
 
 describe('materializer', () => {
 
     it('should allow ref to ref', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             comps: {
                 comp1: {
                     props: {
@@ -32,12 +32,12 @@ describe('materializer', () => {
             ['comps', 'comp2'],
             ['comps', 'comp1']
         ])
-        expect(ds.get('comps.comp1')).toEqual({
+        expect(materializer.get('comps.comp1')).toEqual({
             props: {
                 label: 5
             }
         })
-        expect(ds.get('comps.comp2')).toEqual({
+        expect(materializer.get('comps.comp2')).toEqual({
             props: {
                 label: 5
             }
@@ -45,12 +45,12 @@ describe('materializer', () => {
     })
 
     it('should allow ref to ref update', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
 
-        ds.update({
+        materializer.update({
             comps: {
                 comp1: {
                     props: {
@@ -70,7 +70,7 @@ describe('materializer', () => {
             }
         })
 
-        const invalidation = ds.update({
+        const invalidation = materializer.update({
             comps: {
                 comp3: {
                     props: {
@@ -85,12 +85,12 @@ describe('materializer', () => {
             ['comps', 'comp2'],
             ['comps', 'comp1'],
         ])
-        expect(ds.get('comps.comp1')).toEqual({
+        expect(materializer.get('comps.comp1')).toEqual({
             props: {
                 label: 6
             }
         })
-        expect(ds.get('comps.comp2')).toEqual({
+        expect(materializer.get('comps.comp2')).toEqual({
             props: {
                 label: 6
             }

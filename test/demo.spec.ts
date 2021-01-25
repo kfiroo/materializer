@@ -1,14 +1,14 @@
-import {createDataSource} from '../src';
+import {createMaterializer} from '../src';
 
 describe('materializer', () => {
 
     it('menu container', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['props'],
             depth: 3
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             props: {
                 masterPage: {
                     mc1: {
@@ -27,11 +27,11 @@ describe('materializer', () => {
             ['props', 'c1dmp', 'mt1']
         ])
 
-        expect(ds.get('props.c1dmp.mt1')).toEqual({
+        expect(materializer.get('props.c1dmp.mt1')).toEqual({
             isOpen: false
         })
 
-        const invalidation2 = ds.update({
+        const invalidation2 = materializer.update({
             props: {
                 masterPage: {
                     mc1: {
@@ -47,17 +47,17 @@ describe('materializer', () => {
         ])
 
         invalidation2.forEach(inv => {
-            expect(ds.get([...inv, 'isOpen'])).toEqual(true)
+            expect(materializer.get([...inv, 'isOpen'])).toEqual(true)
         })
     })
 
     it('env stuff', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['props', 'tpa'],
             depth: 3
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             props: {
                 masterPage: {
                     comp1: {
@@ -112,15 +112,15 @@ describe('materializer', () => {
             }
         })
 
-        expect(ds.get('props.masterPage.comp1')).toEqual({
+        expect(materializer.get('props.masterPage.comp1')).toEqual({
             reducedMotion: true,
             currentUrl: 'www.kof.net/home',
             isLoggedIn: true
         })
-        expect(ds.get('props.masterPage.WIX_ADS')).toEqual({
+        expect(materializer.get('props.masterPage.WIX_ADS')).toEqual({
             brandName: 'kof1',
             brandLogoUrl: 'www.kof.img',
         })
-        expect(ds.get('tpa.comps.tpa1')).toEqual({instance: 'kkkkkkk'})
+        expect(materializer.get('tpa.comps.tpa1')).toEqual({instance: 'kkkkkkk'})
     })
 })

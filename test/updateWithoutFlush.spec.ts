@@ -1,14 +1,14 @@
-import {createDataSource} from '../src';
+import {createMaterializer} from '../src';
 
 describe('materializer', () => {
 
     it('should update references when updating the model', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
 
-        ds.updateWithoutFlush({
+        materializer.updateWithoutFlush({
             comps: {
                 comp1: {
                     props: {
@@ -18,9 +18,9 @@ describe('materializer', () => {
             }
         })
 
-        expect(ds.get('comps.comp1')).toBeUndefined()
+        expect(materializer.get('comps.comp1')).toBeUndefined()
 
-        ds.updateWithoutFlush({
+        materializer.updateWithoutFlush({
             links: {
                 link1: {
                     href: 'http://tahat.shel.kof.raki'
@@ -28,15 +28,15 @@ describe('materializer', () => {
             }
         })
 
-        expect(ds.get('comps.comp1')).toBeUndefined()
+        expect(materializer.get('comps.comp1')).toBeUndefined()
 
-        const invalidation1 = ds.flush()
+        const invalidation1 = materializer.flush()
 
         expect(invalidation1).toEqual([
             ['comps', 'comp1']
         ])
 
-        expect(ds.get('comps.comp1')).toEqual({
+        expect(materializer.get('comps.comp1')).toEqual({
             props: {
                 link: {
                     href: 'http://tahat.shel.kof.raki'

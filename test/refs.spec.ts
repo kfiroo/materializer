@@ -1,14 +1,14 @@
-import {createDataSource} from '../src';
+import {createMaterializer} from '../src';
 
 describe('materializer', () => {
 
     it('should allow mix of references and values', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             comps: {
                 comp1: {
                     props: {
@@ -26,7 +26,7 @@ describe('materializer', () => {
         expect(invalidation1).toEqual([
             ['comps', 'comp1']
         ])
-        expect(ds.get('comps.comp1')).toEqual({
+        expect(materializer.get('comps.comp1')).toEqual({
             props: {
                 label: 5,
                 link: {
@@ -37,12 +37,12 @@ describe('materializer', () => {
     })
 
     it('should allow mix of references from different sources', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             comps: {
                 comp1: {
                     props: {
@@ -65,7 +65,7 @@ describe('materializer', () => {
         expect(invalidation1).toEqual([
             ['comps', 'comp1']
         ])
-        expect(ds.get('comps.comp1')).toEqual({
+        expect(materializer.get('comps.comp1')).toEqual({
             props: {
                 label: 5,
                 link: {
@@ -76,12 +76,12 @@ describe('materializer', () => {
     })
 
     it('should allow references to observedRoots', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             comps: {
                 comp1: {
                     props: {
@@ -99,12 +99,12 @@ describe('materializer', () => {
             ['comps', 'comp2'],
             ['comps', 'comp1']
         ])
-        expect(ds.get('comps.comp1')).toEqual({
+        expect(materializer.get('comps.comp1')).toEqual({
             props: {
                 label: 5
             }
         })
-        expect(ds.get('comps.comp2')).toEqual({
+        expect(materializer.get('comps.comp2')).toEqual({
             props: {
                 label: 5
             }
@@ -112,12 +112,12 @@ describe('materializer', () => {
     })
 
     it.skip('should throw on ref cycles', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
 
-        expect(() => ds.update({
+        expect(() => materializer.update({
             comps: {
                 comp1: {
                     props: {
@@ -134,12 +134,12 @@ describe('materializer', () => {
     })
 
     it('should update references when updating the model', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             comps: {
                 comp1: {
                     props: {
@@ -151,13 +151,13 @@ describe('materializer', () => {
         expect(invalidation1).toEqual([
             ['comps', 'comp1']
         ])
-        expect(ds.get('comps.comp1')).toEqual({
+        expect(materializer.get('comps.comp1')).toEqual({
             props: {
                 link: undefined
             }
         })
 
-        const invalidation2 = ds.update({
+        const invalidation2 = materializer.update({
             links: {
                 link1: {
                     href: 'http://tahat.shel.kof.raki'
@@ -168,7 +168,7 @@ describe('materializer', () => {
             ['comps', 'comp1']
         ])
 
-        expect(ds.get('comps.comp1')).toEqual({
+        expect(materializer.get('comps.comp1')).toEqual({
             props: {
                 link: {
                     href: 'http://tahat.shel.kof.raki'
@@ -177,12 +177,12 @@ describe('materializer', () => {
         })
 
         // don't materialize twice
-        expect(ds.get('comps.comp1')).toBe(ds.get('comps.comp1'))
-        expect(ds.get('comps.comp1.props.link')).toBe(ds.get('links.link1'))
+        expect(materializer.get('comps.comp1')).toBe(materializer.get('comps.comp1'))
+        expect(materializer.get('comps.comp1.props.link')).toBe(materializer.get('links.link1'))
     })
 
     it('should not change original values - no side effect', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
@@ -196,7 +196,7 @@ describe('materializer', () => {
             }
         }
 
-        ds.update(obj)
+        materializer.update(obj)
         expect(obj.comps.comp1).toEqual({
             props: {
                 link: '$links.link1'

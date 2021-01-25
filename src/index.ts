@@ -2,13 +2,13 @@ import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, tak
 
 const REF_DOLLAR = '$'
 
-interface DataSourceOptions {
+interface MaterializerOptions {
     observedRoots: Array<string>
     depth: number
 }
 
-interface DataSourceFactory {
-    (options: DataSourceOptions): DataSource
+interface MaterializerFactory {
+    (options: MaterializerOptions): Materializer
 }
 
 interface DataFragment {
@@ -17,7 +17,7 @@ interface DataFragment {
 
 type Invalidations = Array<[string, string | number]>
 
-interface DataSource {
+interface Materializer {
     update(fragment: DataFragment, fragmentSchema?: DataFragment): Invalidations
     updateWithoutFlush(fragment: DataFragment, fragmentSchema?: DataFragment): void
     flush(): Invalidations
@@ -61,7 +61,7 @@ export const mergeSchemas = (targetSchema: DataFragment, newSchema: DataFragment
     merge(targetSchema, newSchema)
 }
 
-export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
+export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) => {
     const template = {}
     const materialized = {}
     const schemas = {}
@@ -183,7 +183,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
             .filter(([root]) => observedRoots.includes(root))
     }
 
-    const updateWithoutFlush: DataSource['updateWithoutFlush'] = (fragment, fragmentSchema = inferSchema(fragment)) => {
+    const updateWithoutFlush: Materializer['updateWithoutFlush'] = (fragment, fragmentSchema = inferSchema(fragment)) => {
         mergeSchemas(fragmentSchema)
 
         mergeTemplates(fragment)

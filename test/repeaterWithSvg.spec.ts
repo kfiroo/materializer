@@ -1,4 +1,4 @@
-import {createDataSource} from '../src';
+import {createMaterializer} from '../src';
 
 const items = {
     item1: {
@@ -36,12 +36,12 @@ const links = {
 describe('materializer', () => {
 
     it('repeater', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['props'],
             depth: 2
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             props: {
                 repeater: {
                     items: ['$items.item1', '$items.item2']
@@ -55,7 +55,7 @@ describe('materializer', () => {
             ['props', 'repeater']
         ])
 
-        expect(ds.get('props.repeater')).toEqual({
+        expect(materializer.get('props.repeater')).toEqual({
             items: [
                 {
                     svgShape: '<svg1/>',
@@ -79,12 +79,12 @@ describe('materializer', () => {
     })
 
     it('update repeater dependency', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['props'],
             depth: 2
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             props: {
                 repeater1: {
                     items: ['$items.item1', '$items.item2', '$items.item3']
@@ -102,7 +102,7 @@ describe('materializer', () => {
             ['props', 'repeater2'],
         ])
 
-        const invalidation2 = ds.update({
+        const invalidation2 = materializer.update({
             links: {
                 link1: {
                     href: 'http://roro.js',
@@ -115,7 +115,7 @@ describe('materializer', () => {
             ['props', 'repeater1']
         ])
 
-        const repeater1 = ds.get('props.repeater1')
+        const repeater1 = materializer.get('props.repeater1')
 
         expect(repeater1.items[1]).toEqual({
             svgShape: '<svg1/>',
@@ -132,12 +132,12 @@ describe('materializer', () => {
     })
 
     it('update repeaters references', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['props'],
             depth: 2
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             props: {
                 repeater1: {
                     items: ['$items.item1', '$items.item2']
@@ -155,7 +155,7 @@ describe('materializer', () => {
             ['props', 'repeater2'],
         ])
 
-        const invalidation2 = ds.update({
+        const invalidation2 = materializer.update({
             props: {
                 repeater2: {
                     items: ['$items.item3']
@@ -167,13 +167,13 @@ describe('materializer', () => {
             ['props', 'repeater2']
         ])
 
-        expect(ds.get('props.repeater2').items[0]).toEqual({
+        expect(materializer.get('props.repeater2').items[0]).toEqual({
             svgShape: '<svg3/>',
             title: "I'm a title 3",
             description: "monkey pig 3"
         })
 
-        const invalidation3 = ds.update({
+        const invalidation3 = materializer.update({
             svgShapes: {
                 svg1: '<svg1_new/>',
             }
@@ -183,7 +183,7 @@ describe('materializer', () => {
             ['props', 'repeater1']
         ])
 
-        expect(ds.get('props.repeater1')).toEqual({
+        expect(materializer.get('props.repeater1')).toEqual({
             items: [
                 {
                     svgShape: '<svg1_new/>',
@@ -205,7 +205,7 @@ describe('materializer', () => {
             ]
         })
 
-        const invalidation4 = ds.update({
+        const invalidation4 = materializer.update({
             svgShapes: {
                 svg3: '<svg3_new/>'
             }
@@ -215,7 +215,7 @@ describe('materializer', () => {
             ['props', 'repeater2']
         ])
 
-        expect(ds.get('props.repeater2').items[0]).toEqual({
+        expect(materializer.get('props.repeater2').items[0]).toEqual({
             svgShape: '<svg3_new/>',
             title: "I'm a title 3",
             description: "monkey pig 3"

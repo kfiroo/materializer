@@ -1,14 +1,14 @@
-import {createDataSource} from '../src';
+import {createMaterializer} from '../src';
 
 describe('materializer', () => {
 
     it('should materialize without refs', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
 
-        const invalidation1 = ds.update({
+        const invalidation1 = materializer.update({
             comps: {
                 comp1: {
                     props: {
@@ -20,7 +20,7 @@ describe('materializer', () => {
         expect(invalidation1).toEqual([
             ['comps', 'comp1']
         ])
-        expect(ds.get('comps.comp1')).toEqual({
+        expect(materializer.get('comps.comp1')).toEqual({
             props: {
                 label: 5
             }
@@ -28,7 +28,7 @@ describe('materializer', () => {
     })
 
     it('should keep same object reference when has no ref', () => {
-        const ds = createDataSource({
+        const materializer = createMaterializer({
             observedRoots: ['comps'],
             depth: 2
         })
@@ -43,9 +43,9 @@ describe('materializer', () => {
             }
         }
 
-        ds.update(obj)
+        materializer.update(obj)
 
-        expect(ds.get('comps.comp1')).toBe(obj.comps.comp1)
-        expect(ds.get('comps.comp1')).toBe(ds.get('comps.comp1'))
+        expect(materializer.get('comps.comp1')).toBe(obj.comps.comp1)
+        expect(materializer.get('comps.comp1')).toBe(materializer.get('comps.comp1'))
     })
 })
