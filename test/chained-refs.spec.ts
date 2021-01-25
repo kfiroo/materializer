@@ -37,8 +37,12 @@ describe('materializer', () => {
                 label: 5
             }
         })
+        expect(ds.get('comps.comp2')).toEqual({
+            props: {
+                label: 5
+            }
+        })
     })
-
 
     it('should allow ref to ref update', () => {
         const ds = createDataSource({
@@ -80,8 +84,13 @@ describe('materializer', () => {
             ['comps', 'comp3'],
             ['comps', 'comp2'],
             ['comps', 'comp1'],
-        ])     
+        ])
         expect(ds.get('comps.comp1')).toEqual({
+            props: {
+                label: 6
+            }
+        })
+        expect(ds.get('comps.comp2')).toEqual({
             props: {
                 label: 6
             }

@@ -1,6 +1,7 @@
 import {createDataSource} from '../src';
 
 describe('materializer', () => {
+
     it('should materialize without refs', () => {
         const ds = createDataSource({
             observedRoots: ['comps'],
@@ -25,6 +26,7 @@ describe('materializer', () => {
             }
         })
     })
+
     it('should keep same object reference when has no ref', () => {
         const ds = createDataSource({
             observedRoots: ['comps'],
@@ -42,7 +44,8 @@ describe('materializer', () => {
         }
 
         ds.update(obj)
-        
+
         expect(ds.get('comps.comp1')).toBe(obj.comps.comp1)
+        expect(ds.get('comps.comp1')).toBe(ds.get('comps.comp1'))
     })
 })

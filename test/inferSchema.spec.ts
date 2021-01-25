@@ -1,6 +1,7 @@
 import {inferSchema} from '../src';
 
 describe('inferSchema', () => {
+
     it('should have empty schema for non schemed object', () => {
         const schema = inferSchema({
             comps: {
@@ -30,7 +31,7 @@ describe('inferSchema', () => {
             comps: {
                 comp1: {
                     props: {
-                        link: {$type:'ref', refPath: 'links.link1'},
+                        link: {$type: 'ref', refPath: 'links.link1'},
                     }
                 }
             }

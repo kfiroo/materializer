@@ -1,6 +1,7 @@
 import {createDataSource} from '../src';
 
 describe('materializer', () => {
+
     it('should update references when updating the model', () => {
         const ds = createDataSource({
             observedRoots: ['comps'],
@@ -16,7 +17,7 @@ describe('materializer', () => {
                 }
             }
         })
-        
+
         expect(ds.get('comps.comp1')).toBeUndefined()
 
         ds.updateWithoutFlush({

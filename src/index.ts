@@ -21,7 +21,7 @@ interface DataSource {
     update(fragment: DataFragment, fragmentSchema?: DataFragment): Invalidations
     updateWithoutFlush(fragment: DataFragment, fragmentSchema?: DataFragment): void
     flush(): Invalidations
-    get<T = any>(path: string): T
+    get<T = any>(path: string | Array<string | number>): T
 }
 
 interface Visitor {
@@ -51,7 +51,7 @@ export const inferSchema = (dataFragment: DataFragment): DataFragment => {
     const schema = {}
     traverse(dataFragment, (value, path) => {
         if (isRef(value)) {
-            set(schema, path, {$type: 'ref', refPath: getRefPath(value)})       
+            set(schema, path, {$type: 'ref', refPath: getRefPath(value)})
          }
     })
     return schema
@@ -86,20 +86,20 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
 
     const mergeSchemas = (newSchema: DataFragment) => {
         traverse(newSchema, (value, path) => {
-            if (has(value, '$type')) { 
+            if (has(value, '$type')) {
                 const oldSchema = get(schemas, path)
                 if (oldSchema) {
-                    const oldRefPath = take(oldSchema.refPath.split('.'), depth).join('.') 
+                    const oldRefPath = take(oldSchema.refPath.split('.'), depth).join('.')
                     index[oldRefPath] = index[oldRefPath] || new Set<string>()
                     index[oldRefPath].delete(take(path, depth).join('.'))
                 }
 
                 set(schemas, path, value)
-                const refPath = take(value.refPath.split('.'), depth).join('.') 
+                const refPath = take(value.refPath.split('.'), depth).join('.')
                 index[refPath] = index[refPath] || new Set<string>()
                 index[refPath].add(take(path, depth).join('.'))
                 return true
-            }   
+            }
         })
     }
 
@@ -114,7 +114,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
 
         const allInvalidations = new Set<string>()
 
-        const queue = new Array<Set<string>>(startFromHere.size > 0 ? startFromHere : invalidations) 
+        const queue = new Array<Set<string>>(startFromHere.size > 0 ? startFromHere : invalidations)
 
         while (queue.length) {
             const paths = queue.shift()
@@ -145,7 +145,7 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                             set(newVal, objPath, resolved)
                         } else {
                             set(newVal, objPath, isArray(objValue) ? [...objValue] :  {...objValue})
-                        }    
+                        }
                     })
                     set(materialized, path, newVal)
                 }
@@ -154,9 +154,9 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
                 if (dependencies){
                     queue.push(dependencies)
                 }
-            })       
+            })
         }
-        
+
         return allInvalidations
     }
 
@@ -185,12 +185,12 @@ export const createDataSource: DataSourceFactory = ({observedRoots, depth}) => {
 
     const updateWithoutFlush: DataSource['updateWithoutFlush'] = (fragment, fragmentSchema = inferSchema(fragment)) => {
         mergeSchemas(fragmentSchema)
-            
+
         mergeTemplates(fragment)
 
         collectInvalidations(fragment)
     }
-    
+
     return {
         update(fragment, schema = inferSchema(fragment)) {
             updateWithoutFlush(fragment, schema)
