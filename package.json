@@ -1,10 +1,21 @@
 {
-  "name": "materializer",
+  "name": "materializerjs",
   "version": "1.0.0",
   "main": "dist/index.js",
-  "repository": "git@github.com:kfiroo/materializer.git",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/kfiroo/materializer.git"
+  },
   "author": "kfiroo <kfirg@wix.com>",
   "license": "MIT",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "bin": {
+    "benchmark": "scripts/benchmarks.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest"
@@ -20,5 +31,14 @@
     "ts-jest": "^26.4.4",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.3"
-  }
+  },
+  "description": "",
+  "bugs": {
+    "url": "https://github.com/kfiroo/materializer/issues"
+  },
+  "homepage": "https://github.com/kfiroo/materializer#readme",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {}
 }

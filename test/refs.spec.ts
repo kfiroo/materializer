@@ -133,6 +133,36 @@ describe('materializer', () => {
         })).toThrow(/circular/i)
     })
 
+    // it('should allow ref in all depths', () => {
+    //     const materializer = createMaterializer({
+    //         invalidations: {
+    //             roots: ['props']
+    //         }
+    //     })
+    //
+    //     const invalidations = materializer.update({
+    //         props: {
+    //             page1: {
+    //                 comp1: {
+    //                     label: '$labels.label5'
+    //                 }
+    //             }
+    //         },
+    //         labels: {
+    //             label1: 'foo',
+    //             label5: 'kof',
+    //         }
+    //     })
+    //
+    //     expect(invalidations).toEqual([
+    //         ['props', 'page1', 'comp1']
+    //     ])
+    //
+    //     expect(materializer.get(invalidations[0])).toEqual({
+    //         label: 'kof'
+    //     })
+    // })
+
     it('should update references when updating the model', () => {
         const materializer = createMaterializer({
             observedRoots: ['comps'],

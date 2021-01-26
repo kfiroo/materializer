@@ -15,25 +15,25 @@ interface DataFragment {
     [source: string]: Record<string | number, any>
 }
 
-type Invalidations = Array<[string, string | number]>
+type Invalidation = Array<string | number>
+type InvalidationList = Array<Invalidation>
+type Path = string | Array<string | number>
 
 interface Materializer {
-    update(fragment: DataFragment, fragmentSchema?: DataFragment): Invalidations
+    update(fragment: DataFragment, fragmentSchema?: DataFragment): InvalidationList
 
     updateWithoutFlush(fragment: DataFragment, fragmentSchema?: DataFragment): void
 
-    flush(): Invalidations
+    flush(): InvalidationList
 
-    get<T = any>(path: string | Array<string | number>): T
+    get<T = any>(path: Path): T
 }
 
 interface Visitor {
     (value: any, path: Array<string | number>): true | void
 }
 
-type Path = Array<string | number>
-
-const traverse = (obj: any, visit: Visitor, path: Path = []) => {
+const traverse = (obj: any, visit: Visitor, path: Array<string | number> = []) => {
     const queue = [{path, val: obj}]
 
     while (queue.length) {
@@ -69,7 +69,6 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
     const materialized = {}
     const schemas = {}
     const pendingInvalidations = new Set<string>()
-
     const index: Record<string, Set<string>> = {}
 
     const mergeTemplates = (newTemplate: DataFragment) => {
@@ -163,7 +162,6 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
         return allInvalidations
     }
 
-
     const collectInvalidations = (obj: DataFragment) => {
         traverse(obj, (__, path) => {
             if (path.length !== depth) {
@@ -182,7 +180,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
 
         pendingInvalidations.clear()
 
-        return Array.from(recursiveInvalidations).map(x => x.split('.') as [string, string | number])
+        return Array.from(recursiveInvalidations).map(x => x.split('.'))
             .filter(([root]) => observedRoots.includes(root))
     }
 
@@ -195,16 +193,13 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
     }
 
     return {
-        update(fragment, schema = inferSchema(fragment)) {
+        update(fragment, schema) {
             updateWithoutFlush(fragment, schema)
             return flush()
         },
         updateWithoutFlush,
         flush,
-        get(path) {
-            const val = get(materialized, path)
-            return val
-        }
+        get: (path) => get(materialized, path)
     }
 }
 
