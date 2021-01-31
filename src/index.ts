@@ -1,7 +1,8 @@
 import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has, map, isArray} from 'lodash'
+import {Queue} from './Queue'
 
 const REF_DOLLAR = '$'
-const QUEUE_INITIAL_LENGTH = 1024
+const QUEUE_INITIAL_SIZE = 1024
 
 interface MaterializerOptions {
     observedRoots: Array<string>
@@ -35,17 +36,13 @@ interface Visitor {
 }
 
 const traverse = (obj: any, visit: Visitor, path: Array<string | number> = []) => {
-    const queue = new Array(QUEUE_INITIAL_LENGTH)
-    let enqueueIndex = 0
-    let dequeueIndex = 0
-    const enqueue = (x: any) => enqueueIndex < QUEUE_INITIAL_LENGTH ? queue[enqueueIndex++] = x : queue.push(x)
-    const dequeue = () => queue[dequeueIndex++]
-    enqueue({path, val: obj})
+    const queue = new Queue(QUEUE_INITIAL_SIZE)
+    queue.enqueue({path, val: obj})
 
-    while (dequeueIndex < enqueueIndex) {
-        const next = dequeue()
+    while (!queue.isEmpty()) {
+        const next = queue.dequeue()
         if (!visit(next.val, next.path) && isObjectLike(next.val)) {
-            forEach(next.val, (val, key) => enqueue({
+            forEach(next.val, (val, key) => queue.enqueue({
                 path: [...next.path, key],
                 val
             }))
@@ -136,10 +133,11 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
 
         const allInvalidations = new Set<string>()
 
-        const queue = new Array<Set<string>>(startFromHere.size > 0 ? startFromHere : invalidations)
-
-        while (queue.length) {
-            const paths = queue.shift()
+        const queue = new Queue(QUEUE_INITIAL_SIZE)
+        queue.enqueue(startFromHere.size > 0 ? startFromHere : invalidations)
+        
+        while (!queue.isEmpty()) {
+            const paths = queue.dequeue()
             forEach([...paths.values()], path => {
                 if (allInvalidations.has(path)) {
                     return
@@ -174,7 +172,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
 
                 const dependencies = index[path]
                 if (dependencies) {
-                    queue.push(dependencies)
+                    queue.enqueue(dependencies)
                 }
             })
         }
