@@ -35,8 +35,8 @@ interface Visitor {
     (value: any, path: Array<string | number>): true | void
 }
 
-const traverse = (obj: any, visit: Visitor) => {
-    const queue = new Queue(QUEUE_INITIAL_SIZE)
+const traverse = (obj: any, visit: Visitor, queueInitialSize = QUEUE_INITIAL_SIZE) => {
+    const queue = new Queue(queueInitialSize)
     queue.enqueue({path: [], val: obj})
 
     while (!queue.isEmpty()) {
@@ -107,16 +107,17 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
         traverse(newSchema, (value, path) => {
             if (value.hasOwnProperty('$type')) {
                 const oldSchema = getByArray(schemas, path)
+                const currentPath = take(path, depth).join('.')
                 if (oldSchema) {
                     const oldRefPath = take(oldSchema.refPath.split('.'), depth).join('.')
                     index[oldRefPath] = index[oldRefPath] || new Set<string>()
-                    index[oldRefPath].delete(take(path, depth).join('.'))
+                    index[oldRefPath].delete(currentPath)
                 }
 
                 set(schemas, path, value)
                 const refPath = take(value.refPath.split('.'), depth).join('.')
                 index[refPath] = index[refPath] || new Set<string>()
-                index[refPath].add(take(path, depth).join('.'))
+                index[refPath].add(currentPath)
                 return true
             }
         })
@@ -138,7 +139,8 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
         
         while (!queue.isEmpty()) {
             const paths = queue.dequeue()
-            forEach([...paths.values()], path => {
+
+            for (const path of paths) {
                 if (allInvalidations.has(path)) {
                     return
                 }
@@ -174,7 +176,8 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                 if (dependencies) {
                     queue.enqueue(dependencies)
                 }
-            })
+            
+            }
         }
 
         return allInvalidations
