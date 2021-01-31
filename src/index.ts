@@ -47,6 +47,20 @@ const traverse = (obj: any, visit: Visitor, path: Array<string | number> = []) =
     }
 }
 
+
+const getByArray =  (obj: any, path: Array<string | number>) => {
+    let val = obj
+    for (let i = 0; i < path.length; i++) {
+        val = val[path[i]]
+        if (typeof val === 'undefined') {
+            return undefined
+        }
+    }
+    return val
+}
+
+const getByString =  (obj: any, path: string) => getByArray(obj, path.split('.'))
+
 const isRef = (x: any) => isString(x) && startsWith(x, REF_DOLLAR)
 const getRefPath = (x: string) => x.slice(1)
 
@@ -76,7 +90,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
             if (path.length !== depth) {
                 return
             }
-            const oldTemplate = get(template, path)
+            const oldTemplate = getByArray(template, path)
             if (isObjectLike(oldTemplate)) {
                 set(template, path, merge({}, oldTemplate, value))
             } else {
@@ -89,7 +103,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
     const mergeSchemas = (newSchema: DataFragment) => {
         traverse(newSchema, (value, path) => {
             if (has(value, '$type')) {
-                const oldSchema = get(schemas, path)
+                const oldSchema = getByArray(schemas, path)
                 if (oldSchema) {
                     const oldRefPath = take(oldSchema.refPath.split('.'), depth).join('.')
                     index[oldRefPath] = index[oldRefPath] || new Set<string>()
@@ -107,7 +121,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
 
     const populate = (invalidations: Set<string>) => {
         const startFromHere = new Set(Array.from(invalidations).filter(singleInvalidation => {
-            const schema = get(schemas, singleInvalidation)
+            const schema = getByString(schemas, singleInvalidation)
             if (!schema) {
                 return true
             }
@@ -126,24 +140,24 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                 }
 
                 allInvalidations.add(path)
-                const val = get(template, path)
+                const val = getByString(template, path)
 
                 if (!has(schemas, path)) {
                     set(materialized, path, val)
                 } else {
-                    const nodeSchema = get(schemas, path)
+                    const nodeSchema = getByString(schemas, path)
                     const newVal = {}
                     traverse(val, (objValue, objPath) => {
                         if (!objPath.length) {
                             return
                         }
-                        const schema = get(nodeSchema, objPath)
+                        const schema = getByArray(nodeSchema, objPath)
                         if (!schema) {
                             set(newVal, objPath, objValue)
                             return
                         }
                         if (has(schema, '$type')) {
-                            const resolved = get(materialized, schema.refPath)
+                            const resolved = getByString(materialized, schema.refPath)
                             set(newVal, objPath, resolved)
                         } else {
                             set(newVal, objPath, isArray(objValue) ? [...objValue] : {...objValue})
