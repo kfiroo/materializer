@@ -34,15 +34,20 @@ interface Visitor {
 }
 
 const traverse = (obj: any, visit: Visitor, path: Array<string | number> = []) => {
-    const queue = [{path, val: obj}]
+    const queue = new Array(512)
+    let enqueueIndex = 0
+    let dequeueIndex = 0
+    const enqueue = (x: any) => enqueueIndex < 512 ? queue[enqueueIndex++] = x : queue.push(x)
+    const dequeue = () => queue[dequeueIndex++]
+    enqueue({path, val: obj})
 
-    while (queue.length) {
-        const next = queue.shift()
+    while (dequeueIndex < enqueueIndex) {
+        const next = dequeue()
         if (!visit(next.val, next.path) && isObjectLike(next.val)) {
-            queue.push(...map(next.val, (val, key) => ({
+            forEach(next.val, (val, key) => enqueue({
                 path: [...next.path, key],
                 val
-            })))
+            }))
         }
     }
 }

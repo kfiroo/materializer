@@ -39,7 +39,6 @@ const run = async () => {
         materializer.update(j)
     })
 
-    // run without infer schema
     _.forEach(jsons, (j, filename) => {
         const start = Date.now()
         for (let i = 0; i < 200; i++) {
@@ -52,10 +51,10 @@ const run = async () => {
         results[filename] = Date.now() - start
     })
 
+    console.log('without pre-calculated inferSchema')
     console.log(results)
 
 
-    // run with infer schema
     _.forEach(jsons, (j, filename) => {
         const schema = inferSchema(j)
         const start = Date.now()
@@ -69,6 +68,7 @@ const run = async () => {
         resultsWithoutInferSchema[filename] = Date.now() - start
     })
 
+    console.log('with pre-calculated inferSchema')
     console.log(resultsWithoutInferSchema)
 }
 
