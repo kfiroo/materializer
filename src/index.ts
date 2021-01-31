@@ -1,4 +1,4 @@
-import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has, map, isArray} from 'lodash'
+import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has, isArray} from 'lodash'
 import {Queue} from './Queue'
 
 const REF_DOLLAR = '$'
@@ -105,7 +105,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
 
     const mergeSchemas = (newSchema: DataFragment) => {
         traverse(newSchema, (value, path) => {
-            if (has(value, '$type')) {
+            if (value.hasOwnProperty('$type')) {
                 const oldSchema = getByArray(schemas, path)
                 if (oldSchema) {
                     const oldRefPath = take(oldSchema.refPath.split('.'), depth).join('.')
@@ -160,7 +160,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                             set(newVal, objPath, objValue)
                             return
                         }
-                        if (has(schema, '$type')) {
+                        if (schema.hasOwnProperty('$type')) {
                             const resolved = getByString(materialized, schema.refPath)
                             set(newVal, objPath, resolved)
                         } else {
