@@ -43,7 +43,7 @@ function generateData(
     return ret
 }
 
-const d = generateData(1, 1, 100, 80, 60)
+const d = generateData(1, 1, 100, 100, 100)
 
 console.log(JSON.stringify(d))
 
