@@ -16,8 +16,8 @@ function generateData(
     roots,  // number of roots
     depth,  // entity depth
     entities,  // entities per root
-    props  // props per entity
-    // refs    // refs per entity
+    props,  // props per entity
+    refs = 0,    // refs per entity
 ) {
     const ret = {}
     const e = JSON.stringify(entity(props))
@@ -29,36 +29,23 @@ function generateData(
 
     paths
         .map(a => a.join('.'))
-        .forEach(p => _.set(ret, p, JSON.parse(e)))
+        .forEach(p => {
+            const newEntity = JSON.parse(e)
+            Object.keys(newEntity).forEach((k, i) => {
+                if (i < refs) {
+                    const newPath = [`refs-p`, p, k].join('.')
+                    _.set(ret, newPath, newEntity[k])
+                    _.set(ret, [p, k].join('.'), `$${newPath}`)
+                } else {
+                    _.set(ret, [p, k].join('.'), newEntity[k])
+                }
+            })
+        })
 
     return ret
 }
 
-const d = generateData(2, 3, 4, 5)
+const d = generateData(1, 1, 10, 7, 2)
 
 console.log(JSON.stringify(d, null, 4))
 
-debugger
-
-const data = {
-    a1: {
-        b1: {
-            c1: {},
-            c2: {}
-        },
-        b2: {
-            c1: {},
-            c2: {}
-        }
-    },
-    a2: {
-        b1: {
-            c1: {},
-            c2: {}
-        },
-        b2: {
-            c1: {},
-            c2: {}
-        }
-    }
-}
