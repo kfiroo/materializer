@@ -1,4 +1,4 @@
-const {createMaterializer} = require('../dist')
+const {createMaterializer, inferSchema} = require('../dist')
 const _ = require('lodash')
 const fs = require('fs')
 const util = require('util')
@@ -28,6 +28,7 @@ const run = async () => {
     const files = await readFiles(path.resolve(__dirname, '..', 'benchmarks'))
     const jsons = _.mapValues(files, ({content}) => JSON.parse(content))
     const results = {}
+    const resultsWithoutInferSchema = {}
 
     // warm up
     _.forEach(jsons, j => {
@@ -38,7 +39,7 @@ const run = async () => {
         materializer.update(j)
     })
 
-    // run
+    // run without infer schema
     _.forEach(jsons, (j, filename) => {
         const start = Date.now()
         for (let i = 0; i < 200; i++) {
@@ -52,6 +53,23 @@ const run = async () => {
     })
 
     console.log(results)
+
+
+    // run with infer schema
+    _.forEach(jsons, (j, filename) => {
+        const schema = inferSchema(j)
+        const start = Date.now()
+        for (let i = 0; i < 200; i++) {
+            const materializer = createMaterializer({
+                observedRoots: ['a0'],
+                depth: 2
+            })
+            materializer.update(j, schema)
+        }        
+        resultsWithoutInferSchema[filename] = Date.now() - start
+    })
+
+    console.log(resultsWithoutInferSchema)
 }
 
 run()
