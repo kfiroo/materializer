@@ -2,8 +2,6 @@
 
 const _ = require('lodash')
 
-console.log('Hello');
-
 const cartesian = (a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())));
 const key = (c, i) => `${String.fromCharCode('a'.charCodeAt(0) + c)}${i}`
 
@@ -33,7 +31,7 @@ function generateData(
             const newEntity = JSON.parse(e)
             Object.keys(newEntity).forEach((k, i) => {
                 if (i < refs) {
-                    const newPath = [`refs-p`, p, k].join('.')
+                    const newPath = [`refs-${p}`, k].join('.')
                     _.set(ret, newPath, newEntity[k])
                     _.set(ret, [p, k].join('.'), `$${newPath}`)
                 } else {
@@ -45,7 +43,7 @@ function generateData(
     return ret
 }
 
-const d = generateData(1, 1, 10, 7, 2)
+const d = generateData(1, 1, 100, 80, 60)
 
-console.log(JSON.stringify(d, null, 4))
+console.log(JSON.stringify(d))
 
