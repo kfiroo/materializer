@@ -1,4 +1,4 @@
-import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has, isArray} from 'lodash'
+import {get, set, forEach, isObjectLike, isString, merge, every, take, has} from 'lodash'
 import {Queue} from './Queue'
 
 const REF_DOLLAR = '$'
@@ -35,9 +35,9 @@ interface Visitor {
     (value: any, path: Array<string | number>): true | void
 }
 
-const traverse = (obj: any, visit: Visitor, path: Array<string | number> = []) => {
+const traverse = (obj: any, visit: Visitor) => {
     const queue = new Queue(QUEUE_INITIAL_SIZE)
-    queue.enqueue({path, val: obj})
+    queue.enqueue({path: [], val: obj})
 
     while (!queue.isEmpty()) {
         const next = queue.dequeue()
@@ -64,7 +64,7 @@ const getByArray =  (obj: any, path: Array<string | number>) => {
 
 const getByString =  (obj: any, path: string) => getByArray(obj, path.split('.'))
 
-const isRef = (x: any) => isString(x) && startsWith(x, REF_DOLLAR)
+const isRef = (x: any) => isString(x) && x[0] === REF_DOLLAR
 const getRefPath = (x: string) => x.slice(1)
 
 export const inferSchema = (dataFragment: DataFragment): DataFragment => {
@@ -164,7 +164,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                             const resolved = getByString(materialized, schema.refPath)
                             set(newVal, objPath, resolved)
                         } else {
-                            set(newVal, objPath, isArray(objValue) ? [...objValue] : {...objValue})
+                            set(newVal, objPath, Array.isArray(objValue) ? [...objValue] : {...objValue})
                         }
                     })
                     set(materialized, path, newVal)
