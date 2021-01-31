@@ -1,6 +1,7 @@
 import {get, set, forEach, isObjectLike, startsWith, isString, merge, every, take, has, map, isArray} from 'lodash'
 
 const REF_DOLLAR = '$'
+const QUEUE_INITIAL_LENGTH = 1024
 
 interface MaterializerOptions {
     observedRoots: Array<string>
@@ -34,10 +35,10 @@ interface Visitor {
 }
 
 const traverse = (obj: any, visit: Visitor, path: Array<string | number> = []) => {
-    const queue = new Array(512)
+    const queue = new Array(QUEUE_INITIAL_LENGTH)
     let enqueueIndex = 0
     let dequeueIndex = 0
-    const enqueue = (x: any) => enqueueIndex < 512 ? queue[enqueueIndex++] = x : queue.push(x)
+    const enqueue = (x: any) => enqueueIndex < QUEUE_INITIAL_LENGTH ? queue[enqueueIndex++] = x : queue.push(x)
     const dequeue = () => queue[dequeueIndex++]
     enqueue({path, val: obj})
 
