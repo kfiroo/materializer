@@ -14,11 +14,12 @@
     "src"
   ],
   "bin": {
-    "benchmark": "scripts/benchmarks.js"
+    "benchmark": "scripts/benchmark-all.js"
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "benchmark": "yarn build && node ./scripts/benchmark-all.js"
   },
   "dependencies": {
     "@types/jest": "^26.0.20",
