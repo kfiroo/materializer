@@ -65,7 +65,7 @@ const getByArray =  (obj: any, path: Array<string | number>) => {
 const getByString =  (obj: any, path: string) => getByArray(obj, path.split('.'))
 
 const isRef = (x: any) => isString(x) && x[0] === REF_DOLLAR
-const getRefPath = (x: string) => x.slice(1)
+const getRefPath = (x: string) => x.slice(1).split('.')
 
 export const inferSchema = (dataFragment: DataFragment): DataFragment => {
     const schema = {}
@@ -108,13 +108,13 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
             if (value.hasOwnProperty('$type')) {
                 const oldSchema = getByArray(schemas, path)
                 if (oldSchema) {
-                    const oldRefPath = take(oldSchema.refPath.split('.'), depth).join('.')
+                    const oldRefPath = take(oldSchema.refPath, depth).join('.')
                     index[oldRefPath] = index[oldRefPath] || new Set<string>()
                     index[oldRefPath].delete(take(path, depth).join('.'))
                 }
 
                 set(schemas, path, value)
-                const refPath = take(value.refPath.split('.'), depth).join('.')
+                const refPath = take(value.refPath, depth).join('.')
                 index[refPath] = index[refPath] || new Set<string>()
                 index[refPath].add(take(path, depth).join('.'))
                 return true
@@ -161,7 +161,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                             return
                         }
                         if (schema.hasOwnProperty('$type')) {
-                            const resolved = getByString(materialized, schema.refPath)
+                            const resolved = getByArray(materialized, schema.refPath)
                             set(newVal, objPath, resolved)
                         } else {
                             set(newVal, objPath, Array.isArray(objValue) ? [...objValue] : {...objValue})
