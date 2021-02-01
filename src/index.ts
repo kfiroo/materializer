@@ -1,4 +1,4 @@
-import {get, set, forEach, merge, has} from 'lodash'
+import {get, set, merge, has} from 'lodash'
 import {Queue} from './Queue'
 import { DataFragment, Materializer, MaterializerFactory, Visitor, Node } from './types'
 import {every, getByArray, getByString, isObjectLike, take} from './utils'
@@ -109,7 +109,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
         
         while (!queue.isEmpty()) {
             const paths = queue.dequeue()
-            forEach([...paths.values()], path => {
+            paths.forEach(path => {
                 if (allInvalidations.has(path)) {
                     return
                 }
