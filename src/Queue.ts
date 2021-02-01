@@ -1,5 +1,5 @@
-export class Queue {
-    queue: Array<any>
+export class Queue<T> {
+    queue: Array<T>
     enqueueIndex: number
     dequeueIndex: number
     initialQueueSize: number
@@ -11,7 +11,7 @@ export class Queue {
         this.initialQueueSize = initialQueueSize
     }
 
-    enqueue(item: any) {
+    enqueue(item: T) {
         this.enqueueIndex < this.initialQueueSize ? this.queue[this.enqueueIndex++] = item : this.queue.push(item)
     }
 

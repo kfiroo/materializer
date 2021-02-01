@@ -35,8 +35,10 @@ interface Visitor {
     (value: any, path: Array<string | number>): true | void
 }
 
+type Node = { path: Array<string | number>, val: any }
+
 const traverse = (obj: any, visit: Visitor) => {
-    const queue = new Queue(QUEUE_INITIAL_SIZE)
+    const queue = new Queue<Node>(QUEUE_INITIAL_SIZE)
     queue.enqueue({path: [], val: obj})
 
     while (!queue.isEmpty()) {
@@ -133,7 +135,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
 
         const allInvalidations = new Set<string>()
 
-        const queue = new Queue(QUEUE_INITIAL_SIZE)
+        const queue = new Queue<Set<string>>(QUEUE_INITIAL_SIZE)
         queue.enqueue(startFromHere.size > 0 ? startFromHere : invalidations)
         
         while (!queue.isEmpty()) {
