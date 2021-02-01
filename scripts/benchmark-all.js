@@ -58,7 +58,7 @@ const run = async () => {
     _.forEach(jsons, (j, filename) => {
         const schema = inferSchema(j)
         const start = Date.now()
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 500; i++) {
             const materializer = createMaterializer({
                 observedRoots: ['a0'],
                 depth: 2
