@@ -1,42 +1,11 @@
 import {get, set, forEach, merge, has} from 'lodash'
 import {Queue} from './Queue'
+import { DataFragment, Materializer, MaterializerFactory, Visitor, Node } from './types'
 import {every, getByArray, getByString, isObjectLike, take} from './utils'
 
 const REF_DOLLAR = '$'
 const QUEUE_INITIAL_SIZE = 1024
 
-interface MaterializerOptions {
-    observedRoots: Array<string>
-    depth: number
-}
-
-interface MaterializerFactory {
-    (options: MaterializerOptions): Materializer
-}
-
-interface DataFragment {
-    [source: string]: Record<string | number, any>
-}
-
-type Invalidation = Array<string | number>
-type InvalidationList = Array<Invalidation>
-type Path = string | Array<string | number>
-
-interface Materializer {
-    update(fragment: DataFragment, fragmentSchema?: DataFragment): InvalidationList
-
-    updateWithoutFlush(fragment: DataFragment, fragmentSchema?: DataFragment): void
-
-    flush(): InvalidationList
-
-    get<T = any>(path: Path): T
-}
-
-interface Visitor {
-    (value: any, path: Array<string | number>): true | void
-}
-
-type Node = { path: Array<string | number>, val: any }
 
 const traverse = (obj: any, visit: Visitor) => {
     const queue = new Queue<Node>(QUEUE_INITIAL_SIZE)
