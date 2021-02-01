@@ -1,5 +1,6 @@
-import {get, set, forEach, isObjectLike, isString, merge, has} from 'lodash'
+import {get, set, forEach, merge, has} from 'lodash'
 import {Queue} from './Queue'
+import {every, getByArray, getByString, isObjectLike, take} from './utils'
 
 const REF_DOLLAR = '$'
 const QUEUE_INITIAL_SIZE = 1024
@@ -52,32 +53,7 @@ const traverse = (obj: any, visit: Visitor) => {
     }
 }
 
-const take = (list: Array<string | number>, count: number) => list.slice(0, count)
-const every = (obj: Record<string, Set<string>>, predicate: (value: Set<string>, key: string) => boolean) => {
-    const keys = Object.keys(obj)
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i]
-        if (!predicate(obj[key], key)) {
-            return false
-        }
-    }
-    return true
-}
-
-const getByArray =  (obj: any, path: Array<string | number>) => {
-    let val = obj
-    for (let i = 0; i < path.length; i++) {
-        val = val[path[i]]
-        if (typeof val === 'undefined') {
-            return undefined
-        }
-    }
-    return val
-}
-
-const getByString =  (obj: any, path: string) => getByArray(obj, path.split('.'))
-
-const isRef = (x: any) => isString(x) && x[0] === REF_DOLLAR
+const isRef = (x: any) => typeof x === 'string' && x[0] === REF_DOLLAR
 const getRefPath = (x: string) => x.slice(1).split('.')
 
 export const inferSchema = (dataFragment: DataFragment): DataFragment => {
