@@ -1,4 +1,4 @@
-import {get, set, merge, has} from 'lodash'
+import {set, merge, has} from 'lodash'
 import {Queue} from './Queue'
 import { DataFragment, Materializer, MaterializerFactory, Visitor, Node } from './types'
 import {every, getByArray, getByString, isObjectLike, take} from './utils'
@@ -188,7 +188,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
         },
         updateWithoutFlush,
         flush,
-        get: (path) => get(materialized, path)
+        get: (path) => Array.isArray(path) ? getByArray(materialized, path) : getByString(materialized, path)
     }
 }
 
