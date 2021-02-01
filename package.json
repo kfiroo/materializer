@@ -7,6 +7,9 @@
     "type": "git",
     "url": "git+ssh://git@github.com/kfiroo/materializer.git"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "author": "kfiroo <kfirg@wix.com>",
   "license": "MIT",
   "files": [
