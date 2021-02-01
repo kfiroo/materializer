@@ -1,7 +1,6 @@
-import {has} from 'lodash'
 import {Queue} from './Queue'
 import {DataFragment, Materializer, MaterializerFactory, Visitor, Node} from './types'
-import {every, getByArray, getByString, isObjectLike, take, setByArray, setByString} from './utils'
+import {every, getByArray, getByString, isObjectLike, take, setByArray, setByString, hasByString} from './utils'
 
 const REF_DOLLAR = '$'
 const QUEUE_INITIAL_SIZE = 1024
@@ -95,7 +94,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
             if (!schema) {
                 return true
             }
-            return every(index, (dependencies, parent) => !has(template, parent) || !dependencies.has(singleInvalidation))
+            return every(index, (dependencies, parent) => !hasByString(template, parent) || !dependencies.has(singleInvalidation))
         }))
 
         const allInvalidations = new Set<string>()
@@ -113,7 +112,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                 allInvalidations.add(path)
                 const val = getByString(template, path)
 
-                if (!has(schemas, path)) {
+                if (!hasByString(schemas, path)) {
                     setByString(materialized, path, val)
                 } else {
                     const nodeSchema = getByString(schemas, path)

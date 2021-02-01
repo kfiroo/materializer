@@ -36,3 +36,16 @@ export const setByArray =  (obj: any, path: Array<string | number>, value: unkno
 }
 
 export const setByString =  (obj: any, path: string, value: unknown) => setByArray(obj, path.split('.'), value)
+
+export const hasByString =  (obj: any, path: string) => {
+    const pathArray = path.split('.')
+    let val = obj
+    for (let i = 0; i < pathArray.length; i++) {
+        if (val.hasOwnProperty(pathArray[i])) {
+            val = val[pathArray[i]]
+        } else {
+            return false
+        }
+    }
+    return true
+}
