@@ -7,6 +7,8 @@ const path = require('path')
 const readdir = util.promisify(fs.readdir);
 const readFile = util.promisify(fs.readFile);
 
+const NUMBER_OF_RUNS = 500
+
 const readFiles = async dirname => {
     const filenames = await readdir(dirname);
     const files_promise = filenames.map(filename => {
@@ -30,25 +32,17 @@ const run = async () => {
     const results = {}
     const resultsWithoutInferSchema = {}
 
-    // warm up
-    _.forEach(jsons, j => {
-        const materializer = createMaterializer({
-            observedRoots: ['a0'],
-            depth: 2
-        })
-        materializer.update(j)
-    })
-
     _.forEach(jsons, (j, filename) => {
         const start = Date.now()
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < NUMBER_OF_RUNS; i++) {
             const materializer = createMaterializer({
                 observedRoots: ['a0'],
                 depth: 2
             })
             materializer.update(j)
         }        
-        results[filename] = Date.now() - start
+        const res = Date.now() - start
+        results[filename] = res + ' avg(' + `${res / NUMBER_OF_RUNS}`.slice(0, 5) + ')'
     })
 
     console.log('without pre-calculated inferSchema')
@@ -58,14 +52,15 @@ const run = async () => {
     _.forEach(jsons, (j, filename) => {
         const schema = inferSchema(j)
         const start = Date.now()
-        for (let i = 0; i < 500; i++) {
+        for (let i = 0; i < NUMBER_OF_RUNS; i++) {
             const materializer = createMaterializer({
                 observedRoots: ['a0'],
                 depth: 2
             })
             materializer.update(j, schema)
         }        
-        resultsWithoutInferSchema[filename] = Date.now() - start
+        const res = Date.now() - start
+        resultsWithoutInferSchema[filename] = res + ' avg(' + `${res / NUMBER_OF_RUNS}`.slice(0, 5) + ')'
     })
 
     console.log('with pre-calculated inferSchema')
