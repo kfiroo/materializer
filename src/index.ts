@@ -1,4 +1,4 @@
-import {get, set, forEach, isObjectLike, isString, merge, every, take, has} from 'lodash'
+import {get, set, forEach, isObjectLike, isString, merge, every, has} from 'lodash'
 import {Queue} from './Queue'
 
 const REF_DOLLAR = '$'
@@ -52,6 +52,7 @@ const traverse = (obj: any, visit: Visitor) => {
     }
 }
 
+const take = (list: Array<string | number>, count: number) => list.slice(0, count)
 
 const getByArray =  (obj: any, path: Array<string | number>) => {
     let val = obj
