@@ -1,7 +1,7 @@
-import {set, has} from 'lodash'
+import {has} from 'lodash'
 import {Queue} from './Queue'
-import { DataFragment, Materializer, MaterializerFactory, Visitor, Node } from './types'
-import {every, getByArray, getByString, isObjectLike, take} from './utils'
+import {DataFragment, Materializer, MaterializerFactory, Visitor, Node} from './types'
+import {every, getByArray, getByString, isObjectLike, take, setByArray, setByString} from './utils'
 
 const REF_DOLLAR = '$'
 const QUEUE_INITIAL_SIZE = 1024
@@ -42,7 +42,7 @@ export const inferSchema = (dataFragment: DataFragment): DataFragment => {
     const schema = {}
     traverse(dataFragment, (value, path) => {
         if (isRef(value)) {
-            set(schema, path, {$type: 'ref', refPath: getRefPath(value)})
+            setByArray(schema, path, {$type: 'ref', refPath: getRefPath(value)})
         }
     })
     return schema
@@ -62,9 +62,9 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
             }
             const oldTemplate = getByArray(template, path)
             if (isObjectLike(oldTemplate)) {
-                set(template, path, Object.assign({}, oldTemplate, value))
+                setByArray(template, path, Object.assign({}, oldTemplate, value))
             } else {
-                set(template, path, value)
+                setByArray(template, path, value)
             }
             return true
         })
@@ -80,7 +80,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                     index[oldRefPath].delete(take(path, depth).join('.'))
                 }
 
-                set(schemas, path, value)
+                setByArray(schemas, path, value)
                 const refPath = take(value.refPath, depth).join('.')
                 index[refPath] = index[refPath] || new Set<string>()
                 index[refPath].add(take(path, depth).join('.'))
@@ -114,7 +114,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                 const val = getByString(template, path)
 
                 if (!has(schemas, path)) {
-                    set(materialized, path, val)
+                    setByString(materialized, path, val)
                 } else {
                     const nodeSchema = getByString(schemas, path)
                     const newVal = {}
@@ -124,17 +124,17 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                         }
                         const schema = getByArray(nodeSchema, objPath)
                         if (!schema) {
-                            set(newVal, objPath, objValue)
+                            setByArray(newVal, objPath, objValue)
                             return
                         }
                         if (schema.hasOwnProperty('$type')) {
                             const resolved = getByArray(materialized, schema.refPath)
-                            set(newVal, objPath, resolved)
+                            setByArray(newVal, objPath, resolved)
                         } else {
-                            set(newVal, objPath, Array.isArray(objValue) ? [...objValue] : {...objValue})
+                            setByArray(newVal, objPath, Array.isArray(objValue) ? [...objValue] : {...objValue})
                         }
                     })
-                    set(materialized, path, newVal)
+                    setByString(materialized, path, newVal)
                 }
 
                 const dependencies = index[path]

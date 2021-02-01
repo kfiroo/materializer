@@ -24,3 +24,15 @@ export const getByArray =  (obj: any, path: Array<string | number>) => {
 }
 
 export const getByString =  (obj: any, path: string) => getByArray(obj, path.split('.'))
+
+export const setByArray =  (obj: any, path: Array<string | number>, value: unknown) => {
+    let val = obj
+    let i = 0
+    for (; i < path.length - 1; i++) {
+        val[path[i]] = val[path[i]] || {}
+        val = val[path[i]]
+    }
+    val[path[i]] = value
+}
+
+export const setByString =  (obj: any, path: string, value: unknown) => setByArray(obj, path.split('.'), value)
