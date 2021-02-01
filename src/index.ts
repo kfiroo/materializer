@@ -13,11 +13,24 @@ const traverse = (obj: any, visit: Visitor) => {
 
     while (!queue.isEmpty()) {
         const next = queue.dequeue()
-        if (!visit(next.val, next.path) && isObjectLike(next.val)) {
-            forEach(next.val, (val, key) => queue.enqueue({
-                path: [...next.path, key],
-                val
-            }))
+        if (!visit(next.val, next.path)) {
+            if (typeof next.val === 'object') {
+                const keys = Object.keys(next.val)
+                for (let i = 0; i < keys.length; i++) {
+                    const key = keys[i]
+                    queue.enqueue({
+                        path: [...next.path, key],
+                        val: next.val[key]
+                    })
+                }
+            } else if (Array.isArray(next.val)) {
+                for (let i = 0; i < next.val.length; i++) {
+                    queue.enqueue({
+                        path: [...next.path, i],
+                        val: next.val[i]
+                    })
+                }
+            }
         }
     }
 }
