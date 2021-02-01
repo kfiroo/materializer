@@ -42,7 +42,10 @@ const run = async () => {
             materializer.update(j)
         }        
         const res = Date.now() - start
-        results[filename] = res + ' avg(' + `${res / NUMBER_OF_RUNS}`.slice(0, 5) + ')'
+        results[filename] = {
+            avg: parseFloat(`${res / NUMBER_OF_RUNS}`.slice(0, 5), 10),
+            total: res
+        }
     })
 
     console.log('without pre-calculated inferSchema')
@@ -60,7 +63,10 @@ const run = async () => {
             materializer.update(j, schema)
         }        
         const res = Date.now() - start
-        resultsWithoutInferSchema[filename] = res + ' avg(' + `${res / NUMBER_OF_RUNS}`.slice(0, 5) + ')'
+        resultsWithoutInferSchema[filename] = {
+            avg: parseFloat(`${res / NUMBER_OF_RUNS}`.slice(0, 5), 10),
+            total: res
+        }
     })
 
     console.log('with pre-calculated inferSchema')

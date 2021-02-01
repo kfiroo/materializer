@@ -1,4 +1,4 @@
-import {set, merge, has} from 'lodash'
+import {set, has} from 'lodash'
 import {Queue} from './Queue'
 import { DataFragment, Materializer, MaterializerFactory, Visitor, Node } from './types'
 import {every, getByArray, getByString, isObjectLike, take} from './utils'
@@ -48,10 +48,6 @@ export const inferSchema = (dataFragment: DataFragment): DataFragment => {
     return schema
 }
 
-export const mergeSchemas = (targetSchema: DataFragment, newSchema: DataFragment) => {
-    merge(targetSchema, newSchema)
-}
-
 export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) => {
     const template = {}
     const materialized = {}
@@ -66,7 +62,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
             }
             const oldTemplate = getByArray(template, path)
             if (isObjectLike(oldTemplate)) {
-                set(template, path, merge({}, oldTemplate, value))
+                set(template, path, Object.assign({}, oldTemplate, value))
             } else {
                 set(template, path, value)
             }
