@@ -59,6 +59,11 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
             if (path.length !== depth) {
                 return
             }
+            if (typeof value === 'undefined') {
+                setByArray(template, path, undefined)
+                return true
+            }
+
             const oldTemplate = getByArray(template, path)
             if (isObjectLike(oldTemplate)) {
                 setByArray(template, path, Object.assign({}, oldTemplate, value))

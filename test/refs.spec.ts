@@ -36,6 +36,44 @@ describe('materializer', () => {
         })
     })
 
+    it('should allow removal of refs', () => {
+        const materializer = createMaterializer({
+            observedRoots: ['comps'],
+            depth: 2
+        })
+
+        materializer.update({
+            comps: {
+                comp1: {
+                    props: {
+                        label: 5,
+                        link: '$links.link1'
+                    }
+                }
+            },
+            links: {
+                link1: {
+                    href: 'http://tahat.shel.kof.raki'
+                }
+            }
+        })
+
+        const invalidation1 = materializer.update({
+            links: {
+                link1: undefined
+            }
+        })
+        expect(invalidation1).toEqual([
+            ['comps', 'comp1']
+        ])
+        expect(materializer.get('comps.comp1')).toEqual({
+            props: {
+                label: 5,
+                link: undefined
+            }
+        })
+    })
+
     it('should allow mix of references from different sources', () => {
         const materializer = createMaterializer({
             observedRoots: ['comps'],
