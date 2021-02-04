@@ -27,7 +27,7 @@ export interface Materializer {
 }
 
 export interface Visitor {
-    (value: any, path: Array<string | number>): true | void
+    (value: any, path: Array<string | number>): boolean | void
 }
 
 export type Node = { path: Array<string | number>, val: any }

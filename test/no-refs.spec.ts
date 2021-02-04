@@ -52,6 +52,33 @@ describe('materializer', () => {
         })
     })
 
+    it('should allow removals', () => {
+        const materializer = createMaterializer({
+            observedRoots: ['comps'],
+            depth: 2
+        })
+
+        const invalidation1 = materializer.update({
+            comps: {
+                comp1: {
+                    label: 5
+                }
+            }
+        })
+        expect(invalidation1).toEqual([
+            ['comps', 'comp1']
+        ])
+        expect(materializer.get('comps.comp1')).toEqual({ label: 5 })
+
+        const invalidation2 = materializer.update({
+            comps: undefined
+        })
+        expect(invalidation2).toEqual([
+            ['comps', 'comp1']
+        ])
+        expect(materializer.get('comps.comp1')).toBeUndefined()
+    })
+
     it('should keep same object reference when has no ref', () => {
         const materializer = createMaterializer({
             observedRoots: ['comps'],

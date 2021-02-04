@@ -56,21 +56,28 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
 
     const mergeTemplates = (newTemplate: DataFragment) => {
         traverse(newTemplate, (value, path) => {
-            if (path.length !== depth) {
-                return
-            }
             if (typeof value === 'undefined') {
+                const oldTemplate = getByArray(template, path)
+                traverse(oldTemplate, (__, oldPath) => {
+                    if (path.length + oldPath.length === depth) {
+                        pendingInvalidations.add([...path, ...oldPath].join('.'))
+                        return true
+                    }
+                })
                 setByArray(template, path, undefined)
                 return true
             }
 
-            const oldTemplate = getByArray(template, path)
-            if (isObjectLike(oldTemplate)) {
-                setByArray(template, path, Object.assign({}, oldTemplate, value))
-            } else {
-                setByArray(template, path, value)
+            if (path.length === depth) {
+                const oldTemplate = getByArray(template, path)
+                pendingInvalidations.add(path.join('.'))
+                if (isObjectLike(oldTemplate)) {
+                    setByArray(template, path, Object.assign({}, oldTemplate, value))
+                } else {
+                    setByArray(template, path, value)
+                }
+                return true
             }
-            return true
         })
     }
 
@@ -151,18 +158,6 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
         return allInvalidations
     }
 
-    const collectInvalidations = (obj: DataFragment) => {
-        traverse(obj, (__, path) => {
-            if (path.length !== depth) {
-                return
-            }
-
-            const sPath = path.join('.')
-            pendingInvalidations.add(sPath)
-
-            return true
-        })
-    }
 
     const flush = () => {
         const recursiveInvalidations = populate(pendingInvalidations)
@@ -177,8 +172,6 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
         mergeSchemas(fragmentSchema)
 
         mergeTemplates(fragment)
-
-        collectInvalidations(fragment)
     }
 
     return {
