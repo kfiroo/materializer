@@ -249,6 +249,41 @@ describe('materializer', () => {
         expect(materializer.get('comps.comp1.props.link')).toBe(materializer.get('links.link1'))
     })
 
+    it('should update reference even when it is deferred', () => {
+        const materializer = createMaterializer({
+            observedRoots: ['comps'],
+            depth: 2
+        })
+        
+        materializer.update({
+            links: {
+                link1: {
+                    href: 'http://tahat.shel.kof.raki'
+                }
+            }
+        })
+
+        const invalidation1 = materializer.update({
+            comps: {
+                comp1: {
+                    link: '$links.link1'
+                },
+                comp2: {
+                    label: 5                
+                }
+            }
+        })
+        expect(invalidation1).toEqual([
+            ['comps', 'comp1'],
+            ['comps', 'comp2']
+        ])
+        expect(materializer.get('comps.comp1')).toEqual({
+            link: {
+                href: 'http://tahat.shel.kof.raki'
+            }
+        })
+    })
+
     it('should not change original values - no side effect', () => {
         const materializer = createMaterializer({
             observedRoots: ['comps'],

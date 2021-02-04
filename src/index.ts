@@ -107,7 +107,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
             if (!schema) {
                 return true
             }
-            return every(index, (dependencies, parent) => !hasByString(template, parent) || !dependencies.has(singleInvalidation))
+            return every(index, (dependencies, parent) => !hasByString(template, parent) || !dependencies.has(singleInvalidation) || !invalidations.has(parent))
         }))
 
         const allInvalidations = new Set<string>()
