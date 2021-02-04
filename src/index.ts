@@ -2,9 +2,10 @@ import {Queue} from './Queue'
 import {DataFragment, Materializer, MaterializerFactory, Visitor, Node} from './types'
 import {every, getByArray, getByString, isObjectLike, take, setByArray, setByString, hasByString} from './utils'
 
+export * from './types'
+
 const REF_DOLLAR = '$'
 const QUEUE_INITIAL_SIZE = 1024
-
 
 const traverse = (obj: any, visit: Visitor) => {
     const queue = new Queue<Node>(QUEUE_INITIAL_SIZE)
@@ -113,7 +114,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
 
         const queue = new Queue<Set<string>>(QUEUE_INITIAL_SIZE)
         queue.enqueue(startFromHere.size > 0 ? startFromHere : invalidations)
-        
+
         while (!queue.isEmpty()) {
             const paths = queue.dequeue()
             paths.forEach(path => {
