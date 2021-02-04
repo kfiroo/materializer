@@ -13,7 +13,7 @@ const traverse = (obj: any, visit: Visitor) => {
     while (!queue.isEmpty()) {
         const next = queue.dequeue()
         if (!visit(next.val, next.path)) {
-            if (typeof next.val === 'object') {
+            if (typeof next.val === 'object' && next.val !== null) {
                 const keys = Object.keys(next.val)
                 for (let i = 0; i < keys.length; i++) {
                     const key = keys[i]

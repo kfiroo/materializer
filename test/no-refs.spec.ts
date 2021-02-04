@@ -27,6 +27,31 @@ describe('materializer', () => {
         })
     })
 
+    it('should materialize nulls', () => {
+        const materializer = createMaterializer({
+            observedRoots: ['comps'],
+            depth: 2
+        })
+
+        const invalidation1 = materializer.update({
+            comps: {
+                comp1: {
+                    props: {
+                        label: null
+                    }
+                }
+            }
+        })
+        expect(invalidation1).toEqual([
+            ['comps', 'comp1']
+        ])
+        expect(materializer.get('comps.comp1')).toEqual({
+            props: {
+                label: null
+            }
+        })
+    })
+
     it('should keep same object reference when has no ref', () => {
         const materializer = createMaterializer({
             observedRoots: ['comps'],
