@@ -12,7 +12,7 @@ export class Queue<T> {
     }
 
     enqueue(item: T) {
-        this.enqueueIndex < this.initialQueueSize ? this.queue[this.enqueueIndex++] = item : this.queue.push(item)
+        this.enqueueIndex < this.initialQueueSize ? this.queue[this.enqueueIndex++] = item : (++this.enqueueIndex && this.queue.push(item))
     }
 
     dequeue() {

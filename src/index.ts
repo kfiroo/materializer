@@ -102,18 +102,37 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
     }
 
     const populate = (invalidations: Set<string>) => {
+        // console.time('startFromHere')
+        const referenceDoenstExistInTemplate = new Set<string>(Object.keys(index).filter(parent => !hasByString(template, parent)))
+        const nonInvalidatedReferences = new Set<string>(Object.keys(index).filter(parent => !invalidations.has(parent)))
+
         const startFromHere = new Set(Array.from(invalidations).filter(singleInvalidation => {
             const schema = getByString(schemas, singleInvalidation)
             if (!schema) {
                 return true
             }
-            return every(index, (dependencies, parent) => !hasByString(template, parent) || !dependencies.has(singleInvalidation) || !invalidations.has(parent))
+            const parents = new Set<string>()
+            traverse(schema, (sVal) => {
+                if (sVal.hasOwnProperty('$type')) {
+                    parents.add(take(sVal.refPath, depth).join('.'))
+                    return true
+                }
+            })
+
+            for (const parent of parents.values()) {
+                if (!referenceDoenstExistInTemplate.has(parent) && !nonInvalidatedReferences.has(parent) && index[parent].has(singleInvalidation)) {
+                    return false
+                }
+            }
+
+            return true
         }))
+        // console.timeEnd('startFromHere')
 
         const allInvalidations = new Set<string>()
 
         const queue = new Queue<Set<string>>(QUEUE_INITIAL_SIZE)
-        queue.enqueue(startFromHere.size > 0 ? startFromHere : invalidations)
+        queue.enqueue(startFromHere)
 
         while (!queue.isEmpty()) {
             const paths = queue.dequeue()
@@ -137,13 +156,14 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                         const schema = getByArray(nodeSchema, objPath)
                         if (!schema) {
                             setByArray(newVal, objPath, objValue)
-                            return
+                            return true
                         }
                         if (schema.hasOwnProperty('$type')) {
                             const resolved = getByArray(materialized, schema.refPath)
                             setByArray(newVal, objPath, resolved)
-                        } else {
-                            setByArray(newVal, objPath, Array.isArray(objValue) ? [...objValue] : {...objValue})
+                            return true
+                        } else if (Array.isArray(objValue)) {
+                            setByArray(newVal, objPath, [])
                         }
                     })
                     setByString(materialized, path, newVal)

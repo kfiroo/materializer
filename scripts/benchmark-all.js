@@ -9,6 +9,8 @@ const readFile = util.promisify(fs.readFile);
 
 const NUMBER_OF_RUNS = 500
 
+const shouldInferSchema = true
+
 const readFiles = async dirname => {
     const filenames = await readdir(dirname);
     const files_promise = filenames.map(filename => {
@@ -27,33 +29,16 @@ const readFiles = async dirname => {
 
 
 const run = async () => {
+    console.log('reading files...')
     const files = await readFiles(path.resolve(__dirname, '..', 'benchmarks'))
+    console.log('parsing files...')
     const jsons = _.mapValues(files, ({content}) => JSON.parse(content))
     const results = {}
     const resultsWithoutInferSchema = {}
 
     _.forEach(jsons, (j, filename) => {
-        const start = Date.now()
-        for (let i = 0; i < NUMBER_OF_RUNS; i++) {
-            const materializer = createMaterializer({
-                observedRoots: ['a0'],
-                depth: 2
-            })
-            materializer.update(j)
-        }        
-        const res = Date.now() - start
-        results[filename] = {
-            avg: parseFloat(`${res / NUMBER_OF_RUNS}`.slice(0, 5), 10),
-            total: res
-        }
-    })
-
-    console.log('without pre-calculated inferSchema')
-    console.log(results)
-
-
-    _.forEach(jsons, (j, filename) => {
-        const schema = inferSchema(j)
+        console.log(`starting ${filename}...`)
+        const schema = shouldInferSchema ? inferSchema(j): undefined
         const start = Date.now()
         for (let i = 0; i < NUMBER_OF_RUNS; i++) {
             const materializer = createMaterializer({
@@ -63,14 +48,16 @@ const run = async () => {
             materializer.update(j, schema)
         }        
         const res = Date.now() - start
-        resultsWithoutInferSchema[filename] = {
+        const result = {
             avg: parseFloat(`${res / NUMBER_OF_RUNS}`.slice(0, 5), 10),
             total: res
         }
+        results[filename] = result
+        console.log(filename, result)
     })
 
-    console.log('with pre-calculated inferSchema')
-    console.log(resultsWithoutInferSchema)
+    console.log('without pre-calculated inferSchema')
+    console.log(results)
 }
 
 run()

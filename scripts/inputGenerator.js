@@ -43,7 +43,8 @@ function generateData(
     return ret
 }
 
-const d = generateData(1, 1, 100, 100, 0)
+const args = process.env.INPUT ? process.env.INPUT.split('_').map(n => parseInt(n, 10)) : [1, 1, 10, 10, 1]
+const d = generateData(...args)
 
 console.log(JSON.stringify(d))
 
