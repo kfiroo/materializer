@@ -34,7 +34,6 @@ const run = async () => {
     console.log('parsing files...')
     const jsons = _.mapValues(files, ({content}) => JSON.parse(content))
     const results = {}
-    const resultsWithoutInferSchema = {}
 
     _.forEach(jsons, (j, filename) => {
         console.log(`starting ${filename}...`)

@@ -5,10 +5,11 @@ import {every, getByArray, getByString, isObjectLike, take, setByArray, setByStr
 export * from './types'
 
 const REF_DOLLAR = '$'
-const QUEUE_INITIAL_SIZE = 1024
+const BIG_FACTOR = 2048
+const SMALL_FACTOR = 128
 
-const traverse = (obj: any, visit: Visitor) => {
-    const queue = new Queue<Node>(QUEUE_INITIAL_SIZE)
+const traverse = (obj: any, visit: Visitor, queueFactor: number) => {
+    const queue = new Queue<Node>(queueFactor)
     queue.enqueue({path: [], val: obj})
 
     while (!queue.isEmpty()) {
@@ -44,7 +45,7 @@ export const inferSchema = (dataFragment: DataFragment): DataFragment => {
         if (isRef(value)) {
             setByArray(schema, path, {$type: 'ref', refPath: getRefPath(value)})
         }
-    })
+    }, BIG_FACTOR)
     return schema
 }
 
@@ -64,7 +65,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                         pendingInvalidations.add([...path, ...oldPath].join('.'))
                         return true
                     }
-                })
+                }, SMALL_FACTOR)
                 setByArray(template, path, undefined)
                 return true
             }
@@ -79,7 +80,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                 }
                 return true
             }
-        })
+        }, BIG_FACTOR)
     }
 
     const mergeSchemas = (newSchema: DataFragment) => {
@@ -98,7 +99,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                 index[refPath].add(take(path, depth).join('.'))
                 return true
             }
-        })
+        }, BIG_FACTOR)
     }
 
     const populate = (invalidations: Set<string>) => {
@@ -117,7 +118,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                     parents.add(take(sVal.refPath, depth).join('.'))
                     return true
                 }
-            })
+            }, SMALL_FACTOR)
 
             for (const parent of parents.values()) {
                 if (!referenceDoenstExistInTemplate.has(parent) && !nonInvalidatedReferences.has(parent) && index[parent].has(singleInvalidation)) {
@@ -131,7 +132,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
 
         const allInvalidations = new Set<string>()
 
-        const queue = new Queue<Set<string>>(QUEUE_INITIAL_SIZE)
+        const queue = new Queue<Set<string>>(BIG_FACTOR)
         queue.enqueue(startFromHere)
 
         while (!queue.isEmpty()) {
@@ -165,7 +166,7 @@ export const createMaterializer: MaterializerFactory = ({observedRoots, depth}) 
                         } else if (Array.isArray(objValue)) {
                             setByArray(newVal, objPath, [])
                         }
-                    })
+                    }, SMALL_FACTOR)
                     setByString(materialized, path, newVal)
                 }
 
