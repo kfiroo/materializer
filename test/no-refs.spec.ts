@@ -79,25 +79,4 @@ describe('materializer', () => {
         expect(materializer.get('comps.comp1')).toBeUndefined()
     })
 
-    it('should keep same object reference when has no ref', () => {
-        const materializer = createMaterializer({
-            observedRoots: ['comps'],
-            depth: 2
-        })
-
-        const obj = {
-            comps: {
-                comp1: {
-                    props: {
-                        label: 5
-                    }
-                }
-            }
-        }
-
-        materializer.update(obj)
-
-        expect(materializer.get('comps.comp1')).toBe(obj.comps.comp1)
-        expect(materializer.get('comps.comp1')).toBe(materializer.get('comps.comp1'))
-    })
 })

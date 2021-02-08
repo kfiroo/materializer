@@ -243,10 +243,6 @@ describe('materializer', () => {
                 }
             }
         })
-
-        // don't materialize twice
-        expect(materializer.get('comps.comp1')).toBe(materializer.get('comps.comp1'))
-        expect(materializer.get('comps.comp1.props.link')).toBe(materializer.get('links.link1'))
     })
 
     it('should update reference even when it is deferred', () => {
