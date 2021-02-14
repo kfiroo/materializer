@@ -1,6 +1,6 @@
 import {Queue} from './Queue'
 import {DataFragment, Materializer, MaterializerFactory, Visitor, Node} from './types'
-import {every, getByArray, getByString, isObjectLike, take, setByArray, setByString, hasByString} from './utils'
+import {getByArray, getByString, isObjectLike, take, setByArray, setByString, hasByString} from './utils'
 
 export * from './types'
 

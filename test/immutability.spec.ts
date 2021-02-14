@@ -62,6 +62,6 @@ describe('materializer', () => {
         const newComp = materializer.get('comps.comp1')
 
         expect(comp1).not.toBe(newComp)
-        // expect(newComp.props.link).toBe(newLink)
+        expect(newComp.props.link).toBe(materializer.get('links.link1'))
     })
 })
