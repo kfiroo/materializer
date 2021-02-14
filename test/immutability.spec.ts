@@ -1,4 +1,5 @@
 import {createMaterializer} from '../src';
+import { ref } from './test-utils';
 
 describe('materializer', () => {
     it('should keep same object reference when has no ref', () => {
@@ -33,7 +34,7 @@ describe('materializer', () => {
             comps: {
                 comp1: {
                     props: {
-                        link: '$links.link1'
+                        link: ref('$links.link1')
                     }
                 }
             },

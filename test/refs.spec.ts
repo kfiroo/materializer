@@ -1,4 +1,5 @@
 import {createMaterializer} from '../src';
+import { ref } from './test-utils';
 
 describe('materializer', () => {
 
@@ -13,7 +14,7 @@ describe('materializer', () => {
                 comp1: {
                     props: {
                         label: 5,
-                        link: '$links.link1'
+                        link: ref('$links.link1')
                     }
                 }
             },
@@ -47,7 +48,7 @@ describe('materializer', () => {
                 comp1: {
                     props: {
                         label: 5,
-                        link: '$links.link1'
+                        link: ref('$links.link1')
                     }
                 }
             },
@@ -84,8 +85,8 @@ describe('materializer', () => {
             comps: {
                 comp1: {
                     props: {
-                        label: '$runtime.comp1.label',
-                        link: '$links.link1'
+                        label: ref('$runtime.comp1.label'),
+                        link: ref('$links.link1')
                     }
                 }
             },
@@ -123,7 +124,7 @@ describe('materializer', () => {
             comps: {
                 comp1: {
                     props: {
-                        label: '$comps.comp2.props.label'
+                        label: ref('$comps.comp2.props.label')
                     }
                 },
                 comp2: {
@@ -159,12 +160,12 @@ describe('materializer', () => {
             comps: {
                 comp1: {
                     props: {
-                        label: '$comps.comp2.props.label'
+                        label: ref('$comps.comp2.props.label')
                     }
                 },
                 comp2: {
                     props: {
-                        label: '$comps.comp1.props.label'
+                        label: ref('$comps.comp1.props.label')
                     }
                 }
             }
@@ -182,7 +183,7 @@ describe('materializer', () => {
     //         props: {
     //             page1: {
     //                 comp1: {
-    //                     label: '$labels.label5'
+    //                     label: ref('$labels.label5')
     //                 }
     //             }
     //         },
@@ -211,7 +212,7 @@ describe('materializer', () => {
             comps: {
                 comp1: {
                     props: {
-                        link: '$links.link1'
+                        link: ref('$links.link1')
                     }
                 }
             }
@@ -262,7 +263,7 @@ describe('materializer', () => {
         const invalidation1 = materializer.update({
             comps: {
                 comp1: {
-                    link: '$links.link1'
+                    link: ref('$links.link1')
                 },
                 comp2: {
                     label: 5                
@@ -289,7 +290,7 @@ describe('materializer', () => {
             comps: {
                 comp1: {
                     props: {
-                        link: '$links.link1'
+                        link: ref('$links.link1')
                     }
                 }
             }
@@ -298,7 +299,7 @@ describe('materializer', () => {
         materializer.update(obj)
         expect(obj.comps.comp1).toEqual({
             props: {
-                link: '$links.link1'
+                link: ref('$links.link1')
             }
         })
     })

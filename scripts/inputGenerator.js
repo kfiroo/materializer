@@ -2,6 +2,8 @@
 
 const _ = require('lodash')
 
+const ref = (value) => ({$type: 'ref', refPath: value.slice(1).split('.')})
+
 const cartesian = (a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())));
 const key = (c, i) => `${String.fromCharCode('a'.charCodeAt(0) + c)}${i}`
 
@@ -33,7 +35,7 @@ function generateData(
                 if (i < refs) {
                     const newPath = [`refs-${p}`, k].join('.')
                     _.set(ret, newPath, newEntity[k])
-                    _.set(ret, [p, k].join('.'), `$${newPath}`)
+                    _.set(ret, [p, k].join('.'), ref(`$${newPath}`))
                 } else {
                     _.set(ret, [p, k].join('.'), newEntity[k])
                 }

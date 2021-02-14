@@ -1,4 +1,5 @@
 import {createMaterializer} from '../src';
+import { ref } from './test-utils';
 
 describe('materializer', () => {
 
@@ -12,12 +13,12 @@ describe('materializer', () => {
             comps: {
                 comp1: {
                     props: {
-                        label: '$comps.comp2.props.label'
+                        label: ref('$comps.comp2.props.label')
                     }
                 },
                 comp2: {
                     props: {
-                        label: '$comps.comp3.props.label'
+                        label: ref('$comps.comp3.props.label')
                     }
                 },
                 comp3: {
@@ -54,12 +55,12 @@ describe('materializer', () => {
             comps: {
                 comp1: {
                     props: {
-                        label: '$comps.comp2.props.label'
+                        label: ref('$comps.comp2.props.label')
                     }
                 },
                 comp2: {
                     props: {
-                        label: '$comps.comp3.props.label'
+                        label: ref('$comps.comp3.props.label')
                     }
                 },
                 comp3: {

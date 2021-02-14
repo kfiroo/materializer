@@ -1,4 +1,5 @@
 import {inferSchema} from '../src';
+import { ref } from './test-utils';
 
 describe('inferSchema', () => {
 
@@ -20,7 +21,7 @@ describe('inferSchema', () => {
             comps: {
                 comp1: {
                     props: {
-                        link: '$links.link1',
+                        link: ref('$links.link1'),
                         label: 5
 
                     }

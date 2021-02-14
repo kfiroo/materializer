@@ -1,4 +1,5 @@
 import {createMaterializer} from '../src';
+import { ref } from './test-utils';
 
 describe('materializer', () => {
 
@@ -12,7 +13,7 @@ describe('materializer', () => {
             comps: {
                 comp1: {
                     props: {
-                        link: '$links.link1'
+                        link: ref('$links.link1')
                     }
                 }
             }

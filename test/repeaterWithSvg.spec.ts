@@ -1,22 +1,23 @@
 import {createMaterializer} from '../src';
+import { ref } from './test-utils';
 
 const items = {
     item1: {
-        svgShape: '$svgShapes.svg1',
+        svgShape: ref('$svgShapes.svg1'),
         title: "I'm a title 1",
         description: "monkey pig 1"
     },
     item2: {
-        svgShape: '$svgShapes.svg1',
+        svgShape: ref('$svgShapes.svg1'),
         title: "I'm a title 2",
         description: "monkey pig 2",
         button: {
             label: 'Buy me today!',
-            link: '$links.link1'
+            link: ref('$links.link1')
         }
     },
     item3: {
-        svgShape: '$svgShapes.svg3',
+        svgShape: ref('$svgShapes.svg3'),
         title: "I'm a title 3",
         description: "monkey pig 3"
     }
@@ -44,7 +45,7 @@ describe('materializer', () => {
         const invalidation1 = materializer.update({
             props: {
                 repeater: {
-                    items: ['$items.item1', '$items.item2']
+                    items: [ref('$items.item1'), ref('$items.item2')]
                 }
             },
             items,
@@ -87,10 +88,10 @@ describe('materializer', () => {
         const invalidation1 = materializer.update({
             props: {
                 repeater1: {
-                    items: ['$items.item1', '$items.item2', '$items.item3']
+                    items: [ref('$items.item1'), ref('$items.item2'), ref('$items.item3')]
                 },
                 repeater2: {
-                    items: ['$items.item1']
+                    items: [ref('$items.item1')]
                 }
             },
             items,
@@ -140,10 +141,10 @@ describe('materializer', () => {
         const invalidation1 = materializer.update({
             props: {
                 repeater1: {
-                    items: ['$items.item1', '$items.item2']
+                    items: [ref('$items.item1'), ref('$items.item2')]
                 },
                 repeater2: {
-                    items: ['$items.item1']
+                    items: [ref('$items.item1')]
                 }
             },
             items,
@@ -158,7 +159,7 @@ describe('materializer', () => {
         const invalidation2 = materializer.update({
             props: {
                 repeater2: {
-                    items: ['$items.item3']
+                    items: [ref('$items.item3')]
                 }
             }
         })

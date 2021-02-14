@@ -1,4 +1,5 @@
 import {createMaterializer} from '../src';
+import { ref } from './test-utils';
 
 describe('materializer', () => {
 
@@ -17,7 +18,7 @@ describe('materializer', () => {
                 },
                 c1dmp: {
                     mt1: {
-                        isOpen: '$props.masterPage.mc1.isOpen'
+                        isOpen: ref('$props.masterPage.mc1.isOpen')
                     }
                 }
             }
@@ -61,20 +62,20 @@ describe('materializer', () => {
             props: {
                 masterPage: {
                     comp1: {
-                        reducedMotion: '$app.env.reducedMotion',
-                        currentUrl: '$app.urls.parsedUrl',
-                        isLoggedIn: '$app.members.isLoggedIn'
+                        reducedMotion: ref('$app.env.reducedMotion'),
+                        currentUrl: ref('$app.urls.parsedUrl'),
+                        isLoggedIn: ref('$app.members.isLoggedIn')
                     },
                     WIX_ADS: {
-                        brandName: '$app.cobranding.brandName',
-                        brandLogoUrl: '$app.cobranding.brandLogoUrl',
+                        brandName: ref('$app.cobranding.brandName'),
+                        brandLogoUrl: ref('$app.cobranding.brandLogoUrl'),
                     }
                 },
             },
             tpa: {
                 comps: {
                     tpa1: {
-                        instance: '$app.clientSpecMap.7.instance'
+                        instance: ref('$app.clientSpecMap.7.instance')
                     }
                 }
             },

@@ -4,7 +4,6 @@ import {getByArray, getByString, isObjectLike, take, setByArray, setByString, ha
 
 export * from './types'
 
-const REF_DOLLAR = '$'
 const BIG_FACTOR = 2048
 const SMALL_FACTOR = 128
 
@@ -36,14 +35,13 @@ const traverse = (obj: any, visit: Visitor, queueFactor: number) => {
     }
 }
 
-const isRef = (x: any) => typeof x === 'string' && x[0] === REF_DOLLAR
-const getRefPath = (x: string) => x.slice(1).split('.')
+const isRef = (x: any) => typeof x === 'object' && x !== null && x.hasOwnProperty('$type') && x.$type === 'ref'
 
 export const inferSchema = (dataFragment: DataFragment): DataFragment => {
     const schema = {}
     traverse(dataFragment, (value, path) => {
         if (isRef(value)) {
-            setByArray(schema, path, {$type: 'ref', refPath: getRefPath(value)})
+            setByArray(schema, path, value)
         }
     }, BIG_FACTOR)
     return schema
