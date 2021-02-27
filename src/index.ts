@@ -7,6 +7,14 @@ export * from './types'
 const BIG_FACTOR = 2048
 const SMALL_FACTOR = 128
 
+const isPlainObject = value => {
+	if (Object.prototype.toString.call(value) !== '[object Object]') {
+		return false
+	}
+	const prototype = Object.getPrototypeOf(value)
+	return prototype === null || prototype === Object.prototype
+}
+
 const traverse = (obj: any, visit: Visitor, queueFactor: number) => {
     const queue = new Queue<Node>(queueFactor)
     queue.enqueue({path: [], val: obj})
@@ -15,7 +23,7 @@ const traverse = (obj: any, visit: Visitor, queueFactor: number) => {
         const next = queue.dequeue()
         if (!visit(next.val, next.path)) {
             if (typeof next.val === 'object') {
-                if (next.val !== null && !(next.val instanceof HTMLElement)) {
+                if (isPlainObject(next.val)) {
                     const keys = Object.keys(next.val)
                     for (let i = 0; i < keys.length; i++) {
                         const key = keys[i]
