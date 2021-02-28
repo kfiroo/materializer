@@ -8,22 +8,11 @@ const BIG_FACTOR = 2048
 const SMALL_FACTOR = 128
 
 const isPlainObject = (value: unknown) => {
-	 // Basic check for Type object that's not null
-     if (typeof value == 'object' && value !== null) {
-
-        // If Object.getPrototypeOf supported, use it
-        if (typeof Object.getPrototypeOf == 'function') {
-          var proto = Object.getPrototypeOf(value);
-          return proto === Object.prototype || proto === null;
-        }
-        
-        // Otherwise, use internal class
-        // This should be reliable as if getPrototypeOf not supported, is pre-ES5
-        return Object.prototype.toString.call(value) == '[object Object]';
-      }
-      
-      // Not an object
-      return false;
+    if (Object.prototype.toString.call(value) !== '[object Object]') {
+		return false
+	}
+	const prototype = Object.getPrototypeOf(value)
+	return prototype === null || prototype === Object.prototype
 }
 
 const traverse = (obj: any, visit: Visitor, queueFactor: number) => {
