@@ -8,11 +8,22 @@ const BIG_FACTOR = 2048
 const SMALL_FACTOR = 128
 
 const isPlainObject = (value: unknown) => {
-	if (Object.prototype.toString.call(value) !== '[object Object]') {
-		return false
-	}
-	const prototype = Object.getPrototypeOf(value)
-	return prototype === null || prototype === Object.prototype
+	 // Basic check for Type object that's not null
+     if (typeof value == 'object' && value !== null) {
+
+        // If Object.getPrototypeOf supported, use it
+        if (typeof Object.getPrototypeOf == 'function') {
+          var proto = Object.getPrototypeOf(value);
+          return proto === Object.prototype || proto === null;
+        }
+        
+        // Otherwise, use internal class
+        // This should be reliable as if getPrototypeOf not supported, is pre-ES5
+        return Object.prototype.toString.call(value) == '[object Object]';
+      }
+      
+      // Not an object
+      return false;
 }
 
 const traverse = (obj: any, visit: Visitor, queueFactor: number) => {
@@ -22,25 +33,23 @@ const traverse = (obj: any, visit: Visitor, queueFactor: number) => {
     while (!queue.isEmpty()) {
         const next = queue.dequeue()
         if (!visit(next.val, next.path)) {
-            if (typeof next.val === 'object') {
-                if (isPlainObject(next.val)) {
-                    const keys = Object.keys(next.val)
-                    for (let i = 0; i < keys.length; i++) {
-                        const key = keys[i]
-                        queue.enqueue({
-                            path: [...next.path, key],
-                            val: next.val[key]
-                        })
-                    }
-                }
-            } else if (Array.isArray(next.val)) {
+            if (Array.isArray(next.val)) {
                 for (let i = 0; i < next.val.length; i++) {
                     queue.enqueue({
                         path: [...next.path, i],
                         val: next.val[i]
                     })
                 }
-            }
+            } else if (isPlainObject(next.val)) {
+                const keys = Object.keys(next.val)
+                for (let i = 0; i < keys.length; i++) {
+                    const key = keys[i]
+                    queue.enqueue({
+                        path: [...next.path, key],
+                        val: next.val[key]
+                    })
+                }
+            }  
         }
     }
 }
