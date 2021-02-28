@@ -7,7 +7,7 @@ export * from './types'
 const BIG_FACTOR = 2048
 const SMALL_FACTOR = 128
 
-const isPlainObject = value => {
+const isPlainObject = (value: unknown) => {
 	if (Object.prototype.toString.call(value) !== '[object Object]') {
 		return false
 	}
