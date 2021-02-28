@@ -7,6 +7,14 @@ export * from './types'
 const BIG_FACTOR = 2048
 const SMALL_FACTOR = 128
 
+const isPlainObject = (value: unknown) => {
+    if (Object.prototype.toString.call(value) !== '[object Object]') {
+		return false
+	}
+	const prototype = Object.getPrototypeOf(value)
+	return prototype === null || prototype === Object.prototype
+}
+
 const traverse = (obj: any, visit: Visitor, queueFactor: number) => {
     const queue = new Queue<Node>(queueFactor)
     queue.enqueue({path: [], val: obj})
@@ -14,25 +22,23 @@ const traverse = (obj: any, visit: Visitor, queueFactor: number) => {
     while (!queue.isEmpty()) {
         const next = queue.dequeue()
         if (!visit(next.val, next.path)) {
-            if (typeof next.val === 'object') {
-                if (next.val !== null && !(next.val instanceof HTMLElement)) {
-                    const keys = Object.keys(next.val)
-                    for (let i = 0; i < keys.length; i++) {
-                        const key = keys[i]
-                        queue.enqueue({
-                            path: [...next.path, key],
-                            val: next.val[key]
-                        })
-                    }
-                }
-            } else if (Array.isArray(next.val)) {
+            if (Array.isArray(next.val)) {
                 for (let i = 0; i < next.val.length; i++) {
                     queue.enqueue({
                         path: [...next.path, i],
                         val: next.val[i]
                     })
                 }
-            }
+            } else if (isPlainObject(next.val)) {
+                const keys = Object.keys(next.val)
+                for (let i = 0; i < keys.length; i++) {
+                    const key = keys[i]
+                    queue.enqueue({
+                        path: [...next.path, key],
+                        val: next.val[key]
+                    })
+                }
+            }  
         }
     }
 }
